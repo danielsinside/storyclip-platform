@@ -270,10 +270,10 @@ class MetricoolService {
 
     // Start time (default: 30 min from now)
     const startTime = scheduledAt || new Date(Date.now() + 30 * 60 * 1000);
-    const intervalSeconds = 10; // 10 seconds between stories
+    const intervalSeconds = 60; // 1 minute between stories (Metricool granularity)
 
     console.log(`📅 Scheduling ${stories.length} stories starting at ${startTime.toISOString()}`);
-    console.log(`⏱️  Interval: ${intervalSeconds}s between stories`);
+    console.log(`⏱️  Interval: 1 minute between stories (Metricool granularity)`);
 
     for (let i = 0; i < stories.length; i++) {
       const story = stories[i];
