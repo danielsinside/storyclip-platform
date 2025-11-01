@@ -287,7 +287,12 @@ async function runPipeline(jobId, inputPath, workDir, options = {}) {
         const effectsService = require('./effects.service');
         const effectsConfig = await effectsService.getEffectsFromDatabase(uploadId);
         effects = effectsConfig.effects || {};
-        overlays = effectsConfig.overlays || {};
+
+        // FIX: Solo sobrescribir overlays si no vienen del request
+        // Los overlays del request tienen prioridad sobre los de la base de datos
+        if (!overlays || Object.keys(overlays).length === 0) {
+          overlays = effectsConfig.overlays || {};
+        }
 
         logger.info(`Loaded effects for upload ${uploadId}:`, { effects, overlays });
       } catch (error) {
