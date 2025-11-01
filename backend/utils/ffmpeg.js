@@ -12,6 +12,10 @@ function normalizeEffects(clip, body) {
   const g = body.filters || body.effects || body.metadata?.visual || {};
   const c = clip.effects || clip.filters || {};
 
+  // NUEVO: Extraer overlays (prioridad: clip > global > body.overlays)
+  const globalOverlays = body.overlays || {};
+  const clipOverlays = clip.overlays || {};
+
   // Preservar ffmpegCommand del frontend si existe
   const colorEffect = c.color ?? g.color;
 
@@ -23,7 +27,10 @@ function normalizeEffects(clip, body) {
   return {
     mirrorHorizontal: c.mirrorHorizontal ?? c.horizontalFlip ?? g.mirrorHorizontal ?? g.horizontalFlip ?? false,
     color: colorEffect,  // Mantener objeto completo con ffmpegCommand
-    indicator: clipIndicator ?? globalIndicator // Solo usar global si no hay indicador del clip
+    indicator: clipIndicator ?? globalIndicator, // Solo usar global si no hay indicador del clip
+    // NUEVO: Incluir overlay (prioridad: clip > global)
+    overlay: Object.keys(clipOverlays).length > 0 ? clipOverlays :
+             (Object.keys(globalOverlays).length > 0 ? globalOverlays : null)
   };
 }
 
