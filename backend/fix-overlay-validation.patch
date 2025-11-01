@@ -1,0 +1,26 @@
+--- services/effects.service.js.orig
++++ services/effects.service.js
+@@ -119,7 +119,13 @@
+ 
+       // Overlay de imagen/watermark
+       if (overlays.watermark && overlays.watermark.enabled) {
+-        const watermarkPath = await this.downloadOverlay(overlays.watermark.image);
++        if (!overlays.watermark.image || overlays.watermark.image === 'undefined') {
++          logger.warn('Watermark enabled but no valid image URL provided, skipping watermark');
++        } else {
++          const watermarkPath = await this.downloadOverlay(overlays.watermark.image);
++          if (!watermarkPath) {
++            logger.warn('Failed to download watermark, skipping');
++          } else {
+         inputs.push(watermarkPath);
+         
+         const position = this.getOverlayPosition(overlays.watermark.position || 'top-right');
+@@ -127,6 +133,8 @@
+         
+         filterComplex.push(`[0:v][1:v]overlay=${position.x}:${position.y}:format=auto:alpha=${opacity}`);
+       }
++        }
++      }
+ 
+       // Overlay VS
+       if (overlays.vs && overlays.vs.enabled) {

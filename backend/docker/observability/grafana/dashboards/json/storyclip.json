@@ -1,0 +1,220 @@
+{
+  "title": "StoryClip – Overview",
+  "uid": "storyclip-overview",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Queue Depth",
+      "targets": [
+        {
+          "expr": "storyclip_queue_depth",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "graph",
+      "title": "Jobs Rate (per minute)",
+      "targets": [
+        {
+          "expr": "rate(storyclip_jobs_created_total[5m]) * 60",
+          "legendFormat": "Created",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(storyclip_jobs_completed_total[5m]) * 60",
+          "legendFormat": "Completed",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(storyclip_jobs_failed_total[5m]) * 60",
+          "legendFormat": "Failed",
+          "refId": "C"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 6,
+        "y": 0
+      },
+      "yAxes": [
+        {
+          "label": "Jobs/min"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "heatmap",
+      "title": "Job Duration by Preset",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(storyclip_job_duration_seconds_bucket[5m])) by (le, preset))",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "SVT-AV1 Available",
+      "targets": [
+        {
+          "expr": "avg(storyclip_svt_av1_available)",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Active Jobs",
+      "targets": [
+        {
+          "expr": "storyclip_active_jobs",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      }
+    },
+    {
+      "id": 6,
+      "type": "graph",
+      "title": "Job Duration Histogram",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(storyclip_job_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "95th percentile",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(storyclip_job_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "50th percentile",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      }
+    },
+    {
+      "id": 7,
+      "type": "graph",
+      "title": "System Resources",
+      "targets": [
+        {
+          "expr": "rate(node_cpu_seconds_total{mode!=\"idle\"}[5m]) * 100",
+          "legendFormat": "CPU Usage %",
+          "refId": "A"
+        },
+        {
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "legendFormat": "Memory Usage %",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      }
+    }
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "refresh": "5s"
+}
+
+
+
+
+
+
+
+
+
+
+

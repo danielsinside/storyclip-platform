@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  storyclip:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: storyclip/backend:ffmpeg8-svt
+    container_name: storyclip
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: "production"
+      # agrega aquí tus secrets/vars (Supabase, Metricool, etc.)
+      # METRICOOL_TOKEN: "..."
+    volumes:
+      - /srv/storyclip/data:/srv/storyclip/data
+      - /srv/storyclip/logs:/srv/storyclip/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '10.0'
+          memory: 10g
+        reservations:
+          cpus: '4.0'
+          memory: 4g
+    ulimits:
+      nofile: 1048576
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  ffmpeg-runner:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ffmpeg
+    image: storyclip/ffmpeg:ffmpeg8-svt
+    container_name: ffmpeg-runner
+    restart: "no"
+    volumes:
+      - /srv/storyclip/data:/workspace
+    deploy:
+      resources:
+        limits:
+          cpus: '12.0'
+          memory: 12g
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/ffmpeg-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

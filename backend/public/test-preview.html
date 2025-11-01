@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Video Preview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .video-container {
+            margin: 20px 0;
+        }
+        video {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border-radius: 8px;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .info code {
+            background: #333;
+            color: #0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Test de Preview de Video</h1>
+
+        <div class="info">
+            <h3>Información del Video Subido:</h3>
+            <p>Upload ID: <code>upl_1761668382507_yxqwp8</code></p>
+            <p>URL: <code>https://story.creatorsflow.app/outputs/uploads/upl_1761668382507_yxqwp8.mp4</code></p>
+        </div>
+
+        <h2>Preview del Video (Configuración Manual)</h2>
+        <div class="video-container">
+            <video id="videoPlayer" controls preload="metadata">
+                <source src="https://story.creatorsflow.app/outputs/uploads/upl_1761668382507_yxqwp8.mp4" type="video/mp4">
+                Tu navegador no soporta el elemento video.
+            </video>
+        </div>
+
+        <div>
+            <button class="test-button" onclick="testVideoLoad()">🔍 Test Carga de Video</button>
+            <button class="test-button" onclick="testVideoPlay()">▶️ Test Reproducción</button>
+            <button class="test-button" onclick="uploadNewVideo()">📤 Subir Nuevo Video</button>
+        </div>
+
+        <div id="testResults" style="margin-top: 20px;"></div>
+
+        <h2>Subir Nuevo Video</h2>
+        <div>
+            <input type="file" id="fileInput" accept="video/*">
+            <button class="test-button" onclick="uploadFile()">Subir</button>
+        </div>
+        <div id="uploadResult" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        const videoPlayer = document.getElementById('videoPlayer');
+        const testResults = document.getElementById('testResults');
+
+        function testVideoLoad() {
+            testResults.innerHTML = '<p>Probando carga del video...</p>';
+
+            const testVideo = document.createElement('video');
+            testVideo.src = videoPlayer.src;
+
+            testVideo.addEventListener('loadedmetadata', () => {
+                testResults.innerHTML = `
+                    <p class="success">✅ Video cargado correctamente!</p>
+                    <p>Duración: ${testVideo.duration.toFixed(2)} segundos</p>
+                    <p>Dimensiones: ${testVideo.videoWidth}x${testVideo.videoHeight}</p>
+                `;
+            });
+
+            testVideo.addEventListener('error', (e) => {
+                testResults.innerHTML = `<p class="error">❌ Error al cargar video: ${e.message}</p>`;
+            });
+
+            testVideo.load();
+        }
+
+        function testVideoPlay() {
+            testResults.innerHTML = '<p>Intentando reproducir video...</p>';
+
+            videoPlayer.play()
+                .then(() => {
+                    testResults.innerHTML = '<p class="success">✅ Video reproduciéndose correctamente!</p>';
+                })
+                .catch((error) => {
+                    testResults.innerHTML = `<p class="error">❌ Error al reproducir: ${error.message}</p>`;
+                });
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadResult = document.getElementById('uploadResult');
+
+            if (!fileInput.files[0]) {
+                uploadResult.innerHTML = '<p class="error">Por favor selecciona un archivo</p>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            uploadResult.innerHTML = '<p>Subiendo archivo...</p>';
+
+            try {
+                const response = await fetch('/api/videos/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    uploadResult.innerHTML = `
+                        <p class="success">✅ Upload exitoso!</p>
+                        <p>Upload ID: <code>${data.uploadId}</code></p>
+                        <p>URL: <code>${data.videoUrl}</code></p>
+                        <button class="test-button" onclick="loadNewVideo('${data.videoUrl}')">Cargar en Preview</button>
+                    `;
+                } else {
+                    uploadResult.innerHTML = `<p class="error">❌ Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                uploadResult.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        function loadNewVideo(url) {
+            videoPlayer.src = url;
+            videoPlayer.load();
+            testResults.innerHTML = '<p class="success">✅ Nuevo video cargado en el reproductor</p>';
+        }
+
+        // Auto-test al cargar la página
+        window.addEventListener('load', () => {
+            videoPlayer.addEventListener('loadedmetadata', () => {
+                console.log('Video metadata loaded:', {
+                    duration: videoPlayer.duration,
+                    width: videoPlayer.videoWidth,
+                    height: videoPlayer.videoHeight
+                });
+            });
+        });
+    </script>
+</body>
+</html>

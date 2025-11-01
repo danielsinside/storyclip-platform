@@ -1,0 +1,15 @@
+data: {"type":"start","message":"Upload started"}
+
+data: {"type":"analyzing","message":"Analyzing video content..."}
+
+data: {"type":"analyzing","message":"Detecting scenes and key moments","progress":20}
+
+data: {"type":"analyzing","message":"Extracting audio features","progress":40}
+
+data: {"type":"analyzing","message":"Analyzing visual composition","progress":60}
+
+data: {"type":"analyzing","message":"Generating AI recommendations","progress":80}
+
+data: {"type":"preset_ready","message":"AI preset generated successfully","progress":100,"data":{"presetId":"preset_001"}}
+
+data: {"type":"complete","message":"Analysis complete"}

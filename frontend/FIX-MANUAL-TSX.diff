@@ -1,0 +1,58 @@
+--- a/src/pages/Manual.tsx
++++ b/src/pages/Manual.tsx
+@@ -930,7 +930,7 @@
+       // Build process request for /api/process-video
+       setIsProcessing(true);
+       
+-      const processRequest: ProcessVideoRequest = {
++      const processRequest: ProcessVideoRequest = {
+         uploadId: uploadId || '',
+         mode: 'manual' as const,
+         preset: 'storyclip_social_916',
+@@ -938,7 +938,7 @@
+           start: clip.start,
+           end: clip.end,
+           effects: {
+-            mirrorHorizontal: horizontalFlip,
++            mirrorHorizontal: horizontalFlip,
+             ...(filterType !== 'none' ? {
+               color: {
+                 brightness: 0.05,
+@@ -963,7 +963,7 @@
+             } : {})
+           }
+         })),
+-        ...(filterType !== 'none' ? {
++        // REMOVIDO: Duplicación de efectos en filters
++        /* ...(filterType !== 'none' ? {
+           filters: {
+             color: {
+               brightness: 0.05,
+@@ -972,7 +972,7 @@
+             },
+             mirrorHorizontal: horizontalFlip
+           }
+-        } : {}),
++        } : {}), */
+         ...(overlayType !== 'none' ? {
+           overlays: {
+             type: overlayType,
+@@ -998,7 +998,7 @@
+         metadata: {
+           title,
+           description,
+           keywords,
+           seed,
+-          delayMode,
+-          visual: {
+-            mirrorHorizontal: horizontalFlip,
+-            indicator: clipIndicator !== 'none'
+-          }
++          delayMode
++          // REMOVIDO: Duplicación de efectos en metadata.visual
++          /* visual: {
++            mirrorHorizontal: horizontalFlip,
++            indicator: clipIndicator !== 'none'
++          } */
+         }
+       };

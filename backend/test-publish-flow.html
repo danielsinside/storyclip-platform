@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Publish Flow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success { background: #d4edda; color: #155724; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .brand-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .brand-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .brand-info h3 {
+            margin: 0 0 5px 0;
+        }
+        .brand-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .social-icons {
+            display: flex;
+            gap: 10px;
+        }
+        .social-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+        .fb { background: #1877f2; }
+        .ig { background: #e4405f; }
+        .tt { background: #000; }
+        .yt { background: #ff0000; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test - Opciones de Publicación</h1>
+
+    <div class="test-section">
+        <h2>1. Test API Connection</h2>
+        <button onclick="testConnection()">Test Backend Connection</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Load Metricool Brands</h2>
+        <button onclick="loadBrands()">Load Brands</button>
+        <div id="brands-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Publish Endpoint</h2>
+        <p class="info">
+            Nota: Este test NO publicará realmente. Solo verifica que el endpoint esté accesible.
+        </p>
+        <button onclick="testPublishEndpoint()">Test Publish Endpoint</button>
+        <div id="publish-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://story.creatorsflow.app/api';
+        const API_KEY = 'sk_cd07c4b520ee1aede470c72b0b11c557211f2ca1bdea1a6f71f98b8538c42df3';
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '<div class="info">Testing connection...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/health/unified`, {
+                    headers: {
+                        'X-Api-Key': API_KEY
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Backend is online!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Connection failed: ${response.status}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function loadBrands() {
+            const resultDiv = document.getElementById('brands-result');
+            resultDiv.innerHTML = '<div class="info">Loading brands...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/metricool/brands`, {
+                    headers: {
+                        'X-Api-Key': API_KEY
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const brandsHtml = data.brands.map(brand => `
+                        <div class="brand-card">
+                            <img src="${brand.picture}" alt="${brand.label}">
+                            <div class="brand-info">
+                                <h3>${brand.label}</h3>
+                                <p>ID: ${brand.id} | User ID: ${brand.userId}</p>
+                                <div class="social-icons">
+                                    ${brand.hasFacebook ? '<span class="social-icon fb">FB</span>' : ''}
+                                    ${brand.hasInstagram ? '<span class="social-icon ig">IG</span>' : ''}
+                                    ${brand.hasTikTok ? '<span class="social-icon tt">TT</span>' : ''}
+                                    ${brand.youtube ? '<span class="social-icon yt">YT</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Loaded ${data.brands.length} brands!</div>
+                        ${brandsHtml}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Failed to load brands</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function testPublishEndpoint() {
+            const resultDiv = document.getElementById('publish-result');
+            resultDiv.innerHTML = '<div class="info">Testing publish endpoint...</div>';
+
+            try {
+                // Test with empty array to verify endpoint exists
+                const response = await fetch(`${API_BASE}/metricool/publish/stories`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Api-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        posts: [],
+                        settings: {}
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 400 && data.code === 'MISSING_POSTS') {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Publish endpoint is accessible!</div>
+                        <p>Endpoint correctly validates input (rejected empty posts array)</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="info">Response: ${response.status}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Auto-run connection test on load
+        window.onload = () => {
+            testConnection();
+        };
+    </script>
+</body>
+</html>

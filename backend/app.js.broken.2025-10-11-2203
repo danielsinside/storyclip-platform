@@ -1,0 +1,229 @@
+const express = require('express');
+const cors = require('cors');
+const Bull = require('bull');
+const fs = require('fs').promises;
+const fss = require('fs');
+const path = require('path');
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
+const ffmpeg = require('fluent-ffmpeg');
+require('dotenv').config();
+
+const OUTPUT_DIR = process.env.OUTPUT_DIR || '/srv/storyclip/outputs';
+const TEMP_DIR   = process.env.TEMP_DIR   || '/srv/storyclip/tmp';
+const REDIS_URL  = process.env.REDIS_URL  || 'redis://localhost:6379';
+
+const app = express();
+app.use(express.json());
+app.use(cors({
+  origin: [/^https?:\/\/([a-z0-9-]+\.)*creatorsflow\.app$/, /^https?:\/\/([a-z0-9-]+\.)*lovable\.app$/],
+  credentials: true
+}));
+
+// ========= Store temporal (cambiar a DB pronto) =========
+const stories = new Map();
+
+// ========= Queues Bull =========
+const storyQueue = new Bull('story-processing', REDIS_URL);
+const reelQueue  = new Bull('reel-processing',  REDIS_URL);
+const imageQueue = new Bull('image-processing', REDIS_URL);
+
+// ========= Utils =========
+function getVideoMetadata(filePath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, md) => {
+      if (err) return reject(err);
+      const v = (md.streams || []).find(s => s.codec_type === 'video') || {};
+      const fps = v.r_frame_rate ? eval(v.r_frame_rate) : 30;
+      resolve({ duration: parseFloat(md.format.duration || 0), width: v.width||0, height: v.height||0, fps });
+    });
+  });
+}
+
+async function downloadToTemp(url, jobId, subdir, fallbackExt='.mp4') {
+  let ext = fallbackExt;
+  try { ext = path.extname(new URL(url).pathname) || fallbackExt; } catch {}
+  const out = path.join(TEMP_DIR, subdir, `${jobId}${ext}`);
+  await fs.mkdir(path.dirname(out), { recursive: true });
+  const res = await axios({ method:'GET', url, responseType:'stream' });
+  await new Promise((resolve, reject) => {
+    const w = fss.createWriteStream(out);
+    res.data.pipe(w);
+    w.on('finish', resolve); w.on('error', reject);
+  });
+  return out;
+}
+
+async function processStory(inputPath, config) {
+  const { clipDuration=5, aspectRatio='9:16', jobId } = config;
+  const outDir = path.join(OUTPUT_DIR, jobId);
+  await fs.mkdir(outDir, { recursive: true });
+
+  const meta = await getVideoMetadata(inputPath);
+  const total = Math.max(1, Math.floor(meta.duration / clipDuration));
+  const outputs = [];
+
+  for (let i=0; i<total; i++) {
+    const start = i * clipDuration;
+    const out = path.join(outDir, `clip_${String(i+1).padStart(3,'0')}.mp4`);
+    await new Promise((resolve, reject) => {
+      let cmd = ffmpeg(inputPath)
+        .setStartTime(start).setDuration(clipDuration)
+        .videoFilters(aspectRatio==='9:16' ? ['crop=ih*9/16:ih','scale=1080:1920'] : ['scale=1280:720'])
+        .audioFilters(['loudnorm=I=-16:TP=-1.5:LRA=11'])
+        .outputOptions(['-c:v libx264','-preset medium','-crf 23','-c:a aac','-b:a 128k','-movflags +faststart'])
+        .output(out);
+      if (process.env.FFMPEG_THREADS) cmd = cmd.outputOptions([`-threads ${process.env.FFMPEG_THREADS}`]);
+      cmd.on('end', resolve).on('error', reject).run();
+    });
+    const st = await fs.stat(out);
+    const cm = await getVideoMetadata(out);
+    outputs.push({ type:'clip',
+      relativePath:`outputs/${jobId}/${path.basename(out)}`,
+      absolutePath: out,
+      size: st.size,
+      metadata: { duration: cm.duration, width: cm.width, height: cm.height, fps: cm.fps }
+    });
+  }
+  return outputs;
+}
+
+async function processImage(imagePath, config) {
+  const { duration=5, jobId } = config;
+  const outDir = path.join(OUTPUT_DIR, jobId);
+  await fs.mkdir(outDir, { recursive: true });
+  const out = path.join(outDir,'clip_001.mp4');
+
+  await new Promise((resolve,reject)=>{
+    let cmd = ffmpeg(imagePath)
+      .loop(duration)
+      .videoFilters([
+        'scale=1080:1920:force_original_aspect_ratio=increase',
+        'crop=1080:1920',
+        `zoompan=z='min(zoom+0.0015,1.5)':d=${duration*30}:s=1080x1920`
+      ])
+      .outputOptions(['-c:v libx264','-preset medium','-crf 23','-pix_fmt yuv420p','-movflags +faststart',`-t ${duration}`])
+      .output(out);
+    if (process.env.FFMPEG_THREADS) cmd = cmd.outputOptions([`-threads ${process.env.FFMPEG_THREADS}`]);
+    cmd.on('end',resolve).on('error',reject).run();
+  });
+
+  const st = await fs.stat(out);
+  const cm = await getVideoMetadata(out);
+  return [{ type:'clip', relativePath:`outputs/${jobId}/clip_001.mp4`, absolutePath: out, size: st.size,
+            metadata:{duration:cm.duration,width:cm.width,height:cm.height,fps:cm.fps}}];
+}
+
+async function notifyWebhook(payload) {
+  return axios.post(process.env.WEBHOOK_URL, payload, {
+    headers: { Authorization: `Bearer ${process.env.VIDEO_BACKEND_KEY}` }
+  });
+}
+
+// ========= Workers =========
+storyQueue.process(async (job)=>{
+  const { jobId, mediaUrl, config } = job.data;
+  try {
+    const file = await downloadToTemp(mediaUrl, jobId, 'videos', '.mp4');
+    const outs = await processStory(file, { ...config, jobId });
+    await notifyWebhook({ jobId, status:'completed', progress:100,
+      outputs: outs.map(o=>({ type:'clip', path:o.relativePath, size:o.size, metadata:o.metadata })) });
+    await fs.unlink(file).catch(()=>{});
+  } catch (e) { await notifyWebhook({ jobId, status:'failed', error:e.message }).catch(()=>{}); throw e; }
+});
+
+reelQueue.process(async (job)=>{
+  const { jobId, mediaUrl, config } = job.data;
+  try {
+    const file = await downloadToTemp(mediaUrl, jobId, 'videos', '.mp4');
+    const outs = await processStory(file, { ...config, clipDuration:7, jobId });
+    await notifyWebhook({ jobId, status:'completed', progress:100,
+      outputs: outs.map(o=>({ type:'clip', path:o.relativePath, size:o.size, metadata:o.metadata })) });
+    await fs.unlink(file).catch(()=>{});
+  } catch (e) { await notifyWebhook({ jobId, status:'failed', error:e.message }).catch(()=>{}); throw e; }
+});
+
+imageQueue.process(async (job)=>{
+  const { jobId, mediaUrl, config } = job.data;
+  try {
+    const file = await downloadToTemp(mediaUrl, jobId, 'images', '.jpg');
+    const outs = await processImage(file, { ...config, jobId });
+    await notifyWebhook({ jobId, status:'completed', progress:100,
+      outputs: outs.map(o=>({ type:'clip', path:o.relativePath, size:o.size, metadata:o.metadata })) });
+    await fs.unlink(file).catch(()=>{});
+  } catch (e) { await notifyWebhook({ jobId, status:'failed', error:e.message }).catch(()=>{}); throw e; }
+});
+
+// ========= API =========
+app.get('/health', (req,res)=>res.json({status:'ok',service:'storyclip',version:'1.0.0',uptime:process.uptime()}));
+app.get('/config', (req,res)=>res.json({maxUploadMB:200,allowedOrigins:['https://creatorsflow.app','*.lovable.app']}));
+
+// Auth (mock)
+app.post('/auth/login',(req,res)=>{
+  const {email}=req.body||{}; if(!email) return res.status(400).json({error:{code:'AUTH_INVALID',message:'email required'}});
+  res.json({token:'mock-jwt-token',user:{id:'u_123',email}});
+});
+
+// Stories CRUD
+app.get('/stories',(req,res)=>res.json({items:[...stories.values()],nextCursor:null}));
+app.post('/stories',(req,res)=>{
+  const id='st_'+Math.random().toString(36).slice(2,7);
+  const now=new Date().toISOString();
+  const doc={id,createdAt:now,updatedAt:now,status:'draft',...req.body};
+  stories.set(id,doc);
+  res.status(201).json(doc);
+});
+app.get('/stories/:id',(req,res)=>{const d=stories.get(req.params.id); return d?res.json(d):res.status(404).json({error:{code:'NOT_FOUND',message:'story not found'}});});
+app.patch('/stories/:id',(req,res)=>{const d=stories.get(req.params.id); if(!d) return res.status(404).json({error:{code:'NOT_FOUND',message:'story not found'}}); Object.assign(d,req.body,{updatedAt:new Date().toISOString()}); res.json(d);});
+app.delete('/stories/:id',(req,res)=>{ if(!stories.has(req.params.id)) return res.status(404).json({error:{code:'NOT_FOUND',message:'story not found'}}); stories.delete(req.params.id); res.status(204).end();});
+
+// Procesar
+app.post('/stories/:id/process', async (req,res)=>{
+  const story=stories.get(req.params.id);
+  if(!story) return res.status(404).json({error:{code:'NOT_FOUND',message:'story not found'}});
+  if(!story.mediaUrl) return res.status(400).json({error:{code:'NO_MEDIA',message:'story has no mediaUrl'}});
+  const jobId=uuidv4(); const {type='story',config={}}=req.body||{};
+  story.processingJob={jobId,type,progress:0,status:'queued',startedAt:new Date().toISOString()};
+  story.status='processing'; story.updatedAt=new Date().toISOString();
+  const q = type==='story'?storyQueue: type==='reel'?reelQueue: imageQueue;
+  await q.add({jobId,storyId:story.id,mediaUrl:story.mediaUrl,type,config:{...config,clipDuration:config.clipDuration|| (type==='reel'?7:5),aspectRatio:config.aspectRatio||'9:16'}});
+  res.json({jobId,status:'queued',message:'Processing started'});
+});
+
+app.get('/stories/:id/status',(req,res)=>{
+  const s=stories.get(req.params.id); if(!s) return res.status(404).json({error:{code:'NOT_FOUND',message:'story not found'}});
+  res.json({id:s.id,status:s.status,processingJob:s.processingJob,outputs:s.outputs});
+});
+
+// Webhook Receiver
+app.post('/webhooks/vps', async (req,res)=>{
+  const auth=req.headers.authorization;
+  if(!auth || auth!==`Bearer ${process.env.VIDEO_BACKEND_KEY}`) return res.status(401).json({error:{code:'UNAUTHORIZED',message:'Invalid auth'}});
+  const {jobId,status,outputs=[],error}=req.body||{};
+  const s=[...stories.values()].find(x=>x.processingJob?.jobId===jobId);
+  if(!s) return res.status(404).json({error:{code:'NOT_FOUND',message:'story not found'}});
+  if(status==='completed'){
+    s.status='completed'; s.processingJob.status='completed'; s.processingJob.progress=100; s.processingJob.completedAt=new Date().toISOString();
+    s.outputs = outputs.map(o=>({...o,url:`https://storyclip.creatorsflow.app/${o.path}`}));
+  } else if(status==='failed'){
+    s.status='failed'; s.processingJob.status='failed'; s.processingJob.error=error; s.processingJob.completedAt=new Date().toISOString();
+  }
+  s.updatedAt=new Date().toISOString();
+  res.json({success:true});
+});
+
+// Estáticos /outputs (con CORS y cache) — evita path traversal
+app.use('/outputs',(req,res,next)=>{
+  const p = path.normalize(req.path||''); if (p.includes('..')) return res.status(400).json({error:{code:'INVALID_PATH',message:'Invalid path'}});
+  res.setHeader('Access-Control-Allow-Origin','https://creatorsflow.app');
+  res.setHeader('Access-Control-Allow-Methods','GET');
+  res.setHeader('Cache-Control','public, max-age=31536000');
+  next();
+}, express.static(OUTPUT_DIR));
+
+// Error handler
+app.use((err,req,res,next)=>{ console.error('Error:',err); res.status(500).json({error:{code:'INTERNAL_ERROR',message:err.message}}); });
+
+// Start
+const port = process.env.PORT || 4000;
+app.listen(port,'127.0.0.1',()=>console.log(`StoryClip API running on ${port}`));

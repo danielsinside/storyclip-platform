@@ -1,0 +1,76 @@
+{
+  "title": "StoryClip – SLOs & Performance",
+  "uid": "storyclip-slos",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "API Availability SLO",
+      "targets": [{ "expr": "storyclip_api_availability" }],
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 0.999 },
+              { "color": "green", "value": 0.999 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate SLO",
+      "targets": [{ "expr": "storyclip_error_rate" }],
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 0.005 },
+              { "color": "red", "value": 0.005 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Latency P90 por Preset",
+      "targets": [{ "expr": "storyclip_latency_p90" }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "yAxes": [
+        {
+          "label": "Segundos",
+          "min": 0,
+          "max": 60
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Throughput por Preset",
+      "targets": [{ "expr": "storyclip_throughput" }],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "yAxes": [
+        {
+          "label": "Jobs/segundo",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "type": "heatmap",
+      "title": "Distribución de Latencia",
+      "targets": [{ "expr": "histogram_quantile(0.5, sum(rate(storyclip_job_duration_seconds_bucket[5m])) by (le, preset))" }],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 }
+    }
+  ],
+  "time": { "from": "now-6h", "to": "now" }
+}

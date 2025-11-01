@@ -1,0 +1,657 @@
+/**
+ * Rutas robustas para upload y process
+ * Usa el nuevo sistema que evita quedarse en 95%
+ */
+
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs-extra');
+const logger = require('../utils/logger');
+const { sanitizeFilters } = require('../utils/filters');
+const uploadsRepo = require('../services/uploads.repository');
+const robustProcessing = require('../services/robust-processing.service');
+const { createJobId, initJob, updateJob, getJob } = require('../utils/jobs');
+
+const router = express.Router();
+
+const UPLOAD_TMP_DIR = process.env.UPLOAD_TMP_DIR || '/srv/storyclip/tmp/uploads';
+
+// Configurar multer con storage estable
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    fs.mkdirSync(UPLOAD_TMP_DIR, { recursive: true });
+    cb(null, UPLOAD_TMP_DIR);
+  },
+  filename: (req, file, cb) => {
+    // Usar uploadId del query o generar uno
+    const uploadId = (req.query.uploadId) || `upl_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const ext = path.extname(file.originalname || '').toLowerCase() || '.mp4';
+    const safe = `${uploadId}${ext}`;
+    
+    // Guardar metadata para devolverla
+    req._uploadMeta = { uploadId, filename: safe };
+    cb(null, safe);
+  }
+});
+
+const uploadMulter = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 * 1024 } // 10GB
+});
+
+/**
+ * POST /api/videos/upload
+ * Upload estable usando el nuevo sistema de media por jobId
+ */
+router.post('/videos/upload', uploadMulter.single('file'), async (req, res) => {
+  try {
+    const meta = req._uploadMeta;
+    const filePath = path.join(UPLOAD_TMP_DIR, meta.filename);
+
+    // Persistir referencia en memoria
+    uploadsRepo.set(meta.uploadId, {
+      path: filePath,
+      size: req.file?.size ?? null,
+      createdAt: Date.now()
+    });
+
+    logger.info(`Upload registered: ${meta.uploadId} -> ${filePath} (${req.file?.size} bytes)`);
+
+    // Generar nombre de archivo con extensión .mp4 garantizada
+    const fileName = `${meta.uploadId}.mp4`;
+
+    // Mover archivo al directorio de outputs para acceso directo
+    const outputDir = '/srv/storyclip/outputs/uploads';
+    await fs.ensureDir(outputDir);
+    const outputPath = path.join(outputDir, fileName);
+    await fs.move(filePath, outputPath);
+
+    // Actualizar la ruta en el repositorio de uploads
+    uploadsRepo.set(meta.uploadId, {
+      path: outputPath,
+      size: req.file?.size ?? null,
+      createdAt: Date.now()
+    });
+
+    // Devolver URL de preview inmediata con extensión .mp4
+    const videoUrl = `https://story.creatorsflow.app/outputs/uploads/${fileName}`;
+
+    return res.json({
+      success: true,
+      uploadId: meta.uploadId,
+      filename: fileName,
+      size: req.file?.size,
+      videoUrl: videoUrl, // URL con extensión .mp4 garantizada
+      url: videoUrl, // También incluir como 'url' por compatibilidad
+      message: 'File uploaded successfully. Use uploadId to process.'
+    });
+  } catch (error) {
+    logger.error('Upload error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Upload failed',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/videos/:jobId/apply-filter
+ * Aplicar filtro y generar preview filtrado
+ */
+router.post('/videos/:jobId/apply-filter', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const filterConfig = req.body;
+    
+    logger.info(`[ROBUST] Applying filter to job ${jobId}`);
+    
+    // Verificar que el job existe
+    const uploadInfo = uploadsRepo.get(jobId);
+    
+    if (!uploadInfo) {
+      return res.status(404).json({
+        success: false,
+        error: 'Job not found',
+        code: 'JOB_NOT_FOUND'
+      });
+    }
+    
+    // Verificar que existe el archivo source
+    const sourcePath = `/srv/storyclip/uploads/${jobId}/source.mp4`;
+    if (!await fs.pathExists(sourcePath)) {
+      return res.status(404).json({
+        success: false,
+        error: 'Source video not found',
+        code: 'SOURCE_NOT_FOUND'
+      });
+    }
+    
+    // Procesar con FFmpeg
+    const ffmpeg = require('fluent-ffmpeg');
+    const filteredPath = `/srv/storyclip/uploads/${jobId}/filtered.mp4`;
+    
+    return new Promise((resolve, reject) => {
+      let ffmpegCommand = ffmpeg(sourcePath);
+      
+      // Aplicar filtros según la configuración
+      if (filterConfig.brightness !== undefined) {
+        ffmpegCommand = ffmpegCommand.videoFilters(`eq=brightness=${filterConfig.brightness}`);
+      }
+      
+      if (filterConfig.contrast !== undefined) {
+        ffmpegCommand = ffmpegCommand.videoFilters(`eq=contrast=${filterConfig.contrast}`);
+      }
+      
+      if (filterConfig.saturation !== undefined) {
+        ffmpegCommand = ffmpegCommand.videoFilters(`eq=saturation=${filterConfig.saturation}`);
+      }
+      
+      if (filterConfig.hue !== undefined) {
+        ffmpegCommand = ffmpegCommand.videoFilters(`eq=hue=${filterConfig.hue}`);
+      }
+      
+      // Configurar output
+      ffmpegCommand
+        .outputOptions([
+          '-c:v libx264',
+          '-preset fast',
+          '-crf 23',
+          '-c:a copy'
+        ])
+        .output(filteredPath)
+        .on('start', (commandLine) => {
+          logger.info(`[ROBUST] FFmpeg started for job ${jobId}: ${commandLine}`);
+        })
+        .on('progress', (progress) => {
+          logger.info(`[ROBUST] FFmpeg progress for job ${jobId}: ${progress.percent}%`);
+        })
+        .on('end', () => {
+          logger.info(`[ROBUST] FFmpeg completed for job ${jobId}`);
+          
+          // Verificar que el archivo se creó
+          fs.pathExists(filteredPath).then(exists => {
+            if (exists) {
+              const filteredPreviewUrl = `/media/${jobId}/filtered.mp4`;
+              
+              res.json({
+                success: true,
+                filteredPreviewUrl: filteredPreviewUrl,
+                message: 'Filter applied successfully'
+              });
+              resolve();
+            } else {
+              logger.error(`[ROBUST] Filtered file not created for job ${jobId}`);
+              res.status(500).json({
+                success: false,
+                error: 'Filtered file not created',
+                code: 'FILTER_FAILED'
+              });
+              resolve();
+            }
+          });
+        })
+        .on('error', (err) => {
+          logger.error(`[ROBUST] FFmpeg error for job ${jobId}: ${err.message}`);
+          
+          // NO romper el preview actual - devolver error limpio
+          res.json({
+            error: true,
+            message: 'FFmpeg failed',
+            code: err.code || 'FFMPEG_ERROR',
+            details: err.message
+          });
+          resolve();
+        })
+        .run();
+    });
+
+  } catch (error) {
+    logger.error(`[ROBUST] Apply filter error: ${error.message}`);
+    
+    // NO romper el preview actual - devolver error limpio
+    res.json({
+      error: true,
+      message: 'Filter application failed',
+      code: 'FILTER_ERROR',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/process-video
+ * Procesar video desde uploadId
+ */
+router.post('/process-video', async (req, res) => {
+  try {
+    const { 
+      uploadId, 
+      videoUrl,           // NUEVO: URL del video
+      mode = 'auto',      // 'auto' | 'manual'
+      clipDuration = 5, 
+      maxClips = 50,
+      clips = [],         // NUEVO: Array de {start, end}
+      filters = {},
+      audio = {},         // NUEVO: Configuración de audio
+      effects = {},       // NUEVO: Efectos extendidos
+      overlays = {},      // NUEVO: Overlays
+      cameraMovement = {}, // NUEVO: Movimientos de cámara
+      metadata = {}       // NUEVO: Metadata
+    } = req.body || {};
+
+    // Validar que se proporcione uploadId O videoUrl
+    if (!uploadId && !videoUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'uploadId or videoUrl is required'
+      });
+    }
+
+    // Validar modo manual
+    if (mode === 'manual' && (!clips || clips.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        error: 'clips array is required for manual mode'
+      });
+    }
+
+    // Validar estructura de clips
+    if (mode === 'manual') {
+      for (let i = 0; i < clips.length; i++) {
+        const clip = clips[i];
+        if (typeof clip.start !== 'number' || typeof clip.end !== 'number') {
+          return res.status(400).json({
+            success: false,
+            error: `Invalid clip at index ${i}: start and end must be numbers`
+          });
+        }
+        if (clip.start >= clip.end) {
+          return res.status(400).json({
+            success: false,
+            error: `Invalid clip at index ${i}: start must be less than end`
+          });
+        }
+      }
+    }
+
+    // Generar jobId si no se proporciona
+    let jobId = req.body.jobId;
+    if (!jobId) {
+      jobId = uploadId || createJobId();
+    }
+
+    // Inicializar el job en el store ANTES de procesar
+    initJob(jobId, {
+      uploadId,
+      videoUrl,
+      mode,
+      clipDuration: parseInt(clipDuration) || 5,
+      maxClips: parseInt(maxClips) || 50,
+      totalClips: mode === 'manual' ? clips.length : (parseInt(maxClips) || 50)
+    });
+
+    // Responder inmediatamente al frontend con el jobId
+    res.json({
+      success: true,
+      jobId: jobId,
+      status: 'pending',
+      progress: 0,
+      message: 'Procesamiento iniciado'
+    });
+
+    // Validar y sanitizar filtros
+    const sanitizedFilters = sanitizeFilters(filters);
+
+    // Procesar asíncronamente (no bloquear la respuesta)
+    setImmediate(async () => {
+      try {
+        // Actualizar job a processing
+        updateJob(jobId, {
+          status: 'processing',
+          progress: 5,
+          message: 'Preparando procesamiento...'
+        });
+
+        const result = await robustProcessing.startProcess({
+          jobId,  // Pasar el jobId al servicio de procesamiento
+          uploadId,
+          videoUrl,
+          mode,
+          clipDuration: parseInt(clipDuration) || 5,
+          maxClips: parseInt(maxClips) || 50,
+          clips,
+          filters: sanitizedFilters,
+          audio,
+          effects,
+          overlays,
+          cameraMovement,
+          metadata,
+          userId: null
+        });
+
+        // El procesamiento debería actualizar el job por sí mismo
+        // pero por si acaso, actualizamos aquí también
+        if (result.success) {
+          updateJob(jobId, {
+            status: 'done',
+            progress: 100,
+            outputUrl: result.outputUrl || `/outputs/uploads/${jobId}.mp4`,
+            message: 'Procesamiento completado'
+          });
+        } else {
+          updateJob(jobId, {
+            status: 'error',
+            errorMessage: result.error || 'Error desconocido'
+          });
+        }
+      } catch (error) {
+        logger.error(`Processing error for job ${jobId}:`, error);
+        updateJob(jobId, {
+          status: 'error',
+          errorMessage: error.message || 'Error en procesamiento'
+        });
+      }
+    });
+
+    return;
+  } catch (error) {
+    logger.error('Process video error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Processing failed',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/jobs/:jobId/status
+ * Obtener status del job - NUNCA devuelve 404
+ */
+router.get('/jobs/:jobId/status', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Primero buscar en nuestro job store
+    const job = getJob(jobId);
+
+    if (job) {
+      // Construir artifacts array desde outputs si existen
+      let artifacts = [];
+      if (job.outputs && Array.isArray(job.outputs)) {
+        artifacts = job.outputs.map((output, index) => ({
+          id: `clip_${String(index + 1).padStart(3, '0')}`,
+          url: output.url || output,
+          type: 'video',
+          format: 'mp4',
+          normalizedUrl: output.url || output,
+          originalUrl: output.url || output,
+          duration: output.durationSeconds || null,
+          size: output.size || null
+        }));
+      } else if (job.metadata?.clips && Array.isArray(job.metadata.clips)) {
+        // Fallback: usar metadata.clips si outputs no existe
+        artifacts = job.metadata.clips.map(clip => ({
+          id: clip.id,
+          url: clip.url,
+          type: clip.type || 'video',
+          format: 'mp4',
+          normalizedUrl: clip.url,
+          originalUrl: clip.url,
+          duration: clip.duration || null,
+          size: clip.size || null
+        }));
+      } else if (job.metadata?.totalClips && job.metadata.totalClips > 1 && job.status === 'processing') {
+        // Durante el procesamiento, generar placeholders basados en totalClips
+        const cleanJobId = jobId.replace(/\.mp4$/, '');
+        const baseClipDirUrl = `/outputs/uploads/${cleanJobId}`;
+        artifacts = Array.from({ length: job.metadata.totalClips }, (_, index) => ({
+          id: `clip_${String(index + 1).padStart(3, '0')}`,
+          url: `${baseClipDirUrl}/clip_${String(index + 1).padStart(3, '0')}.mp4`,
+          type: 'video',
+          format: 'mp4',
+          normalizedUrl: `${baseClipDirUrl}/clip_${String(index + 1).padStart(3, '0')}.mp4`,
+          originalUrl: `${baseClipDirUrl}/clip_${String(index + 1).padStart(3, '0')}.mp4`,
+          processing: true
+        }));
+      } else if (job.outputUrl) {
+        // Fallback: solo un clip si no hay outputs ni metadata.clips
+        artifacts = [{
+          id: 'clip_001',
+          url: job.outputUrl,
+          type: 'video',
+          format: 'mp4',
+          normalizedUrl: job.outputUrl,
+          originalUrl: job.outputUrl
+        }];
+      }
+
+      // Job encontrado en nuestro store
+      return res.json({
+        error: false,
+        status: job.status,
+        progress: job.progress,
+        outputUrl: job.outputUrl,
+        outputs: job.outputs || [], // Incluir array de outputs
+        errorMessage: job.errorMessage,
+        message: job.message,
+        metadata: job.metadata,
+        result: {
+          artifacts: artifacts
+        }
+      });
+    }
+
+    // Si no está en nuestro store, intentar otros sistemas
+    try {
+      const jobMonitoringService = require('../services/job-monitoring.service');
+      const monitoringStatus = jobMonitoringService.getJobStatus(jobId);
+
+      if (monitoringStatus) {
+        return res.json({
+          error: false,
+          status: monitoringStatus.status,
+          progress: monitoringStatus.progress,
+          outputUrl: null,
+          errorMessage: null,
+          message: monitoringStatus.message
+        });
+      }
+    } catch (e) {
+      // Si el servicio de monitoreo no existe, continuar
+    }
+
+    // Si no está en ningún sistema, devolver estado pendiente (NO 404)
+    return res.json({
+      error: true,
+      code: 'JOB_NOT_READY',
+      status: 'pending',
+      progress: 0,
+      outputUrl: null,
+      errorMessage: null,
+      message: 'Job aún no iniciado o en cola'
+    });
+
+  } catch (error) {
+    logger.error('Get job status error:', error);
+    return res.json({
+      error: true,
+      code: 'INTERNAL_ERROR',
+      status: 'error',
+      progress: 0,
+      errorMessage: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/v1/jobs/:jobId/status
+ * Versión v1 del endpoint (mantener compatibilidad)
+ */
+router.get('/v1/jobs/:jobId/status', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Primero buscar en nuestro job store
+    const job = getJob(jobId);
+
+    if (job) {
+      // Construir artifacts array desde outputs si existen
+      let artifacts = [];
+      if (job.outputs && Array.isArray(job.outputs)) {
+        artifacts = job.outputs.map((output, index) => ({
+          id: `clip_${String(index + 1).padStart(3, '0')}`,
+          url: output.url || output,
+          type: 'video',
+          format: 'mp4',
+          normalizedUrl: output.url || output,
+          originalUrl: output.url || output,
+          duration: output.durationSeconds || null,
+          size: output.size || null
+        }));
+      } else if (job.metadata?.clips && Array.isArray(job.metadata.clips)) {
+        // Fallback: usar metadata.clips si outputs no existe
+        artifacts = job.metadata.clips.map(clip => ({
+          id: clip.id,
+          url: clip.url,
+          type: clip.type || 'video',
+          format: 'mp4',
+          normalizedUrl: clip.url,
+          originalUrl: clip.url,
+          duration: clip.duration || null,
+          size: clip.size || null
+        }));
+      } else if (job.metadata?.totalClips && job.metadata.totalClips > 1 && job.status === 'processing') {
+        // NUEVO: Durante el procesamiento, generar placeholders basados en totalClips
+        // Esto permite que el frontend sepa cuántos clips se van a generar
+        const cleanJobId = jobId.replace(/\.mp4$/, '');
+        const baseClipDirUrl = `/outputs/uploads/${cleanJobId}`;
+        artifacts = Array.from({ length: job.metadata.totalClips }, (_, index) => ({
+          id: `clip_${String(index + 1).padStart(3, '0')}`,
+          url: `${baseClipDirUrl}/clip_${String(index + 1).padStart(3, '0')}.mp4`,
+          type: 'video',
+          format: 'mp4',
+          normalizedUrl: `${baseClipDirUrl}/clip_${String(index + 1).padStart(3, '0')}.mp4`,
+          originalUrl: `${baseClipDirUrl}/clip_${String(index + 1).padStart(3, '0')}.mp4`,
+          processing: true  // Indicador de que aún está procesando
+        }));
+      } else if (job.outputUrl) {
+        // Fallback: solo un clip si no hay outputs ni metadata.clips
+        artifacts = [{
+          id: 'clip_001',
+          url: job.outputUrl,
+          type: 'video',
+          format: 'mp4',
+          normalizedUrl: job.outputUrl,
+          originalUrl: job.outputUrl
+        }];
+      }
+
+      // Construir outputs array (URLs simples)
+      const outputUrls = job.outputs ?
+        (Array.isArray(job.outputs) ? job.outputs.map(o => o.url || o) : [job.outputUrl]) :
+        (job.outputUrl ? [job.outputUrl] : []);
+
+      return res.json({
+        success: true,
+        id: jobId,
+        status: job.status,
+        progress: job.progress,
+        message: job.message,
+        result: artifacts.length > 0 ? { artifacts } : null,
+        outputs: outputUrls,
+        totalClips: job.metadata?.totalClips || artifacts.length || 1,
+        createdAt: new Date(job.createdAt).toISOString(),
+        finishedAt: job.status === 'done' ? new Date(job.updatedAt).toISOString() : null,
+        websocketUrl: `ws://${req.get('host')}/ws?jobId=${jobId}`
+      });
+    }
+
+    // Si no está en el store, buscar en otros sistemas
+    try {
+      const jobMonitoringService = require('../services/job-monitoring.service');
+      const monitoringStatus = jobMonitoringService.getJobStatus(jobId);
+
+      if (monitoringStatus) {
+        return res.json({
+          success: true,
+          id: jobId,
+          status: monitoringStatus.status,
+          progress: monitoringStatus.progress,
+          message: monitoringStatus.message,
+          websocketUrl: `ws://${req.get('host')}/ws?jobId=${jobId}`
+        });
+      }
+    } catch (e) {
+      // Continuar si el servicio no existe
+    }
+
+    // Buscar en la base de datos si no está en memoria
+    try {
+      const db = require('../database/db');
+      const dbJob = await db.get(`
+        SELECT job_id, status, progress, output_urls, error_msg, created_at, finished_at
+        FROM jobs
+        WHERE job_id = ?
+      `, [jobId]);
+
+      if (dbJob) {
+        // Parse output_urls JSON
+        let outputUrls = [];
+        let artifacts = [];
+
+        try {
+          outputUrls = JSON.parse(dbJob.output_urls || '[]');
+          artifacts = outputUrls.map((url, index) => ({
+            id: `clip_${String(index + 1).padStart(3, '0')}`,
+            url: url,
+            type: 'video',
+            format: 'mp4',
+            normalizedUrl: url,
+            originalUrl: url
+          }));
+        } catch (e) {
+          logger.warn(`Error parsing output_urls for job ${jobId}:`, e);
+        }
+
+        return res.json({
+          success: true,
+          id: jobId,
+          status: dbJob.status === 'done' ? 'done' : dbJob.status,
+          progress: dbJob.progress || 100,
+          message: dbJob.error_msg || 'Procesamiento completado',
+          result: artifacts.length > 0 ? { artifacts } : null,
+          outputs: outputUrls,
+          totalClips: outputUrls.length,
+          createdAt: dbJob.created_at,
+          finishedAt: dbJob.finished_at,
+          websocketUrl: `ws://${req.get('host')}/ws?jobId=${jobId}`
+        });
+      }
+    } catch (e) {
+      logger.warn(`Error querying database for job ${jobId}:`, e);
+    }
+
+    // Devolver estado pendiente en lugar de 404
+    return res.json({
+      success: true,
+      id: jobId,
+      status: 'pending',
+      progress: 0,
+      message: 'Job en cola o iniciándose',
+      websocketUrl: `ws://${req.get('host')}/ws?jobId=${jobId}`
+    });
+
+  } catch (error) {
+    logger.error('Get job status v1 error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get job status',
+      details: error.message
+    });
+  }
+});
+
+module.exports = router;

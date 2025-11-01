@@ -1,0 +1,21 @@
+{
+  "presetId": "preset_001",
+  "creatorId": "creator_001",
+  "seed": "cinematica",
+  "delayMode": "PRO",
+  "cuts": [
+    { "start": 0, "end": 15 },
+    { "start": 15, "end": 30 },
+    { "start": 30, "end": 45 }
+  ],
+  "audio": {
+    "ambientNoise": true,
+    "amplitude": 1.2
+  },
+  "metadata": {
+    "title": "Amazing Tech Tips",
+    "description": "Learn professional editing techniques",
+    "keywords": "tech, tutorial, professional"
+  },
+  "explanation": "Based on your video's cinematic quality and professional tone, I've optimized for a PRO delay mode with enhanced audio. The content suggests high engagement potential with tech-savvy audiences."
+}

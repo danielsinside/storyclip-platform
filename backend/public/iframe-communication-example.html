@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe Communication Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .panel {
+            border: 2px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            background: #fff;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 StoryClip - Iframe Communication Demo</h1>
+    <p>Este ejemplo muestra cómo comunicar iframes de diferentes dominios usando postMessage</p>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Padre (lovable.dev)</h2>
+            <input type="file" id="fileInput" accept="video/*">
+            <button onclick="uploadVideo()">Upload Video</button>
+            <button onclick="sendTestMessage()">Send Test Message</button>
+            <button onclick="clearLog('parentLog')">Clear Log</button>
+            
+            <div class="status" id="status">Status: Waiting...</div>
+            
+            <div class="log" id="parentLog"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Hijo (id-preview)</h2>
+            <button onclick="sendResponseToParent()">Send Response to Parent</button>
+            <button onclick="clearLog('childLog')">Clear Log</button>
+            
+            <div class="log" id="childLog"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración
+        const API_BASE = 'https://story.creatorsflow.app';
+        const PARENT_ORIGIN = 'https://lovable.dev';
+        const CHILD_ORIGIN = 'https://id-preview--a630f775-59ad-406c-b0a6-387315d2cf10.lovable.app';
+
+        // Logging
+        function log(panel, message) {
+            const logDiv = document.getElementById(panel);
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog(panel) {
+            document.getElementById(panel).innerHTML = '';
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = `Status: ${message}`;
+            log('parentLog', `STATUS: ${message}`);
+        }
+
+        // === CÓDIGO DEL PADRE (lovable.dev) ===
+
+        // Escuchar mensajes del hijo
+        window.addEventListener('message', (event) => {
+            // Verificar origen por seguridad
+            if (event.origin !== CHILD_ORIGIN && event.origin !== window.location.origin) {
+                log('parentLog', `⚠️ Mensaje ignorado de origen no permitido: ${event.origin}`);
+                return;
+            }
+
+            log('parentLog', `📥 Mensaje recibido: ${JSON.stringify(event.data)}`);
+
+            // Procesar diferentes tipos de mensajes
+            switch(event.data.type) {
+                case 'IFRAME_READY':
+                    log('parentLog', '✅ Iframe hijo está listo');
+                    updateStatus('Iframe ready');
+                    break;
+                
+                case 'UPLOAD_COMPLETE':
+                    log('parentLog', `✅ Upload completado: ${event.data.uploadId}`);
+                    updateStatus(`Upload complete: ${event.data.uploadId}`);
+                    break;
+                
+                case 'PROCESSING_UPDATE':
+                    log('parentLog', `📊 Progreso: ${event.data.progress}%`);
+                    updateStatus(`Processing: ${event.data.progress}%`);
+                    break;
+                
+                case 'PROCESSING_COMPLETE':
+                    log('parentLog', `✅ Procesamiento completado: ${event.data.clips.length} clips`);
+                    updateStatus(`Complete: ${event.data.clips.length} clips`);
+                    event.data.clips.forEach((clip, i) => {
+                        log('parentLog', `   Clip ${i+1}: ${clip}`);
+                    });
+                    break;
+                
+                case 'ERROR':
+                    log('parentLog', `❌ Error: ${event.data.message}`);
+                    updateStatus(`Error: ${event.data.message}`);
+                    break;
+                
+                case 'TEST_RESPONSE':
+                    log('parentLog', `✅ Respuesta de test: ${event.data.message}`);
+                    break;
+            }
+        });
+
+        // Función para subir video
+        async function uploadVideo() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) {
+                alert('Selecciona un archivo primero');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            log('parentLog', `📤 Subiendo archivo: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+            updateStatus('Uploading...');
+
+            try {
+                // Upload directo a la API
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${API_BASE}/api/videos/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('parentLog', `✅ Upload exitoso: ${result.uploadId}`);
+                    log('parentLog', `   Video URL: ${result.videoUrl}`);
+                    updateStatus(`Uploaded: ${result.uploadId}`);
+
+                    // Procesar el video
+                    processVideo(result.uploadId);
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+
+            } catch (error) {
+                log('parentLog', `❌ Error en upload: ${error.message}`);
+                updateStatus(`Upload error: ${error.message}`);
+            }
+        }
+
+        // Función para procesar video
+        async function processVideo(uploadId) {
+            log('parentLog', `⚙️ Iniciando procesamiento: ${uploadId}`);
+            updateStatus('Processing...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/process-video`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        uploadId: uploadId,
+                        clipDuration: 3,
+                        maxClips: 5
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('parentLog', `✅ Procesamiento iniciado: ${result.jobId}`);
+                    updateStatus(`Processing: ${result.jobId}`);
+                    
+                    // Monitorear progreso
+                    monitorJob(result.jobId);
+                } else {
+                    throw new Error(result.error || 'Processing failed');
+                }
+
+            } catch (error) {
+                log('parentLog', `❌ Error en procesamiento: ${error.message}`);
+                updateStatus(`Processing error: ${error.message}`);
+            }
+        }
+
+        // Función para monitorear el job
+        async function monitorJob(jobId) {
+            const checkStatus = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/jobs/${jobId}/status`);
+                    const result = await response.json();
+
+                    log('parentLog', `📊 Job status: ${result.status} - ${result.progress}%`);
+                    updateStatus(`${result.status}: ${result.progress}%`);
+
+                    if (result.status === 'done') {
+                        log('parentLog', `✅ Procesamiento completado`);
+                        log('parentLog', `   Total clips: ${result.totalClips}`);
+                        result.outputs.forEach((url, i) => {
+                            log('parentLog', `   Clip ${i+1}: ${url}`);
+                        });
+                        updateStatus(`Complete: ${result.totalClips} clips`);
+                    } else if (result.status === 'error') {
+                        log('parentLog', `❌ Error: ${result.message}`);
+                        updateStatus(`Error: ${result.message}`);
+                    } else {
+                        // Continuar monitoreando
+                        setTimeout(checkStatus, 2000);
+                    }
+
+                } catch (error) {
+                    log('parentLog', `❌ Error monitoreando job: ${error.message}`);
+                    updateStatus(`Monitor error: ${error.message}`);
+                }
+            };
+
+            checkStatus();
+        }
+
+        // Enviar mensaje de test
+        function sendTestMessage() {
+            const message = {
+                type: 'TEST_MESSAGE',
+                data: 'Hello from parent!',
+                timestamp: new Date().toISOString()
+            };
+            
+            // Si hay iframe, enviar a él
+            const iframe = document.querySelector('iframe');
+            if (iframe) {
+                iframe.contentWindow.postMessage(message, CHILD_ORIGIN);
+                log('parentLog', `📤 Mensaje de test enviado al iframe`);
+            } else {
+                // Si no hay iframe, simular respuesta (para demo)
+                log('parentLog', `📤 Mensaje de test (simulado - no hay iframe)`);
+                setTimeout(() => {
+                    window.postMessage({
+                        type: 'TEST_RESPONSE',
+                        message: 'Response from child (simulated)'
+                    }, window.location.origin);
+                }, 500);
+            }
+        }
+
+        // === CÓDIGO DEL HIJO (id-preview) ===
+        
+        // Simular comportamiento del hijo en esta misma página
+        window.addEventListener('message', (event) => {
+            // Este código normalmente estaría en el iframe hijo
+            if (event.data.type === 'TEST_MESSAGE') {
+                log('childLog', `📥 Mensaje recibido del padre: ${event.data.data}`);
+                
+                // Responder al padre
+                window.parent.postMessage({
+                    type: 'TEST_RESPONSE',
+                    message: 'Message received by child!'
+                }, event.origin);
+                
+                log('childLog', `📤 Respuesta enviada al padre`);
+            }
+        });
+
+        function sendResponseToParent() {
+            const response = {
+                type: 'TEST_RESPONSE',
+                message: 'Hello from child iframe!',
+                timestamp: new Date().toISOString()
+            };
+            
+            window.parent.postMessage(response, PARENT_ORIGIN);
+            log('childLog', `📤 Respuesta enviada al padre`);
+        }
+
+        // Notificar que el iframe está listo
+        window.addEventListener('load', () => {
+            log('parentLog', '🚀 Página cargada');
+            log('childLog', '🚀 Iframe (simulado) cargado');
+            
+            // En un iframe real, esto sería:
+            // window.parent.postMessage({ type: 'IFRAME_READY' }, PARENT_ORIGIN);
+        });
+
+        // Log inicial
+        log('parentLog', '🎬 StoryClip Communication Demo iniciado');
+        log('parentLog', `   API: ${API_BASE}`);
+        log('childLog', '📱 Iframe listener activo');
+    </script>
+</body>
+</html>

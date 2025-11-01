@@ -1,0 +1,347 @@
+/**
+ * Servicio de procesamiento robusto
+ * Implementa el pipeline completo: upload → process → finalize
+ * Sin quedarse en 95%
+ */
+
+const path = require('path');
+const fs = require('fs-extra');
+const { v4: uuidv4 } = require('uuid');
+const logger = require('../utils/logger');
+const ffmpegHelper = require('../utils/ffmpeg');
+const db = require('../database/db');
+const uploadsRepo = require('./uploads.repository');
+const metricoolService = require('./metricool.service');
+
+const UPLOAD_TMP_DIR = process.env.UPLOAD_TMP_DIR || '/srv/storyclip/outputs/uploads';
+const PROCESS_WORK_DIR = process.env.PROCESS_WORK_DIR || '/srv/storyclip/work';
+const OUTPUT_ROOT = process.env.OUTPUT_ROOT || '/srv/storyclip/outputs';
+const CDN_BASE = process.env.CDN_BASE || 'https://storyclip.creatorsflow.app/outputs';
+
+/**
+ * Iniciar procesamiento desde uploadId
+ */
+async function startProcess({ uploadId, mode = 'auto', userId = null, clipDuration = 5, maxClips = 50, filters = {} }) {
+  filters = {}) {
+  const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+  try {
+    // 1) Resolver archivo del upload
+    const upl = uploadsRepo.get(uploadId);
+    if (!upl?.path) {
+      await createJob({
+        jobId,
+        status: 'error',
+        progress: 0,
+        message: `Upload not found for ${uploadId}`,
+        userId
+      });
+      throw new Error(`Upload not found: ${uploadId}`);
+    }
+
+    // 2) Preparar workdir del job
+    const workDir = path.join(PROCESS_WORK_DIR, jobId);
+    await fs.ensureDir(workDir);
+
+    const src = upl.path;
+    const ext = path.extname(src).toLowerCase() || '.mp4';
+    const jobInput = path.join(workDir, `source${ext}`);
+
+    // IMPORTANTE: mover dentro del mismo volumen => rename; si falla, copy+unlink
+    try {
+      await fs.rename(src, jobInput);
+      logger.info(`Moved upload to workDir: ${uploadId} -> ${jobInput}`);
+    } catch (renameErr) {
+      logger.warn(`Rename failed, copying: ${renameErr.message}`);
+      await fs.copyFile(src, jobInput);
+      await fs.unlink(src).catch(() => {});
+    }
+
+    // 3) Registrar job en DB como "running: 10%"
+    await createJob({
+      jobId,
+      userId,
+      path: 'api',
+      source: 'user',
+      status: 'running',
+      progress: 10,
+      message: 'File prepared',
+      inputJson: JSON.stringify({ uploadId, mode, clipDuration, maxClips, workDir,
+        filters)
+    });
+
+    // 4) Lanzar pipeline async (no bloquear request)
+    setImmediate(() => {
+      runPipeline(jobId, jobInput, workDir, { clipDuration, maxClips, userId, uploadId,
+        filters)
+        .catch(err => {
+          logger.error(`[runPipeline] fatal for ${jobId}:`, err);
+        });
+    });
+
+    return {
+      success: true,
+      jobId,
+      status: 'running',
+      message: 'Story processing started'
+    };
+
+  } catch (error) {
+    logger.error(`startProcess error for ${uploadId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Pipeline completo de procesamiento
+ */
+async function runPipeline(jobId, inputPath, workDir, options = {}) {
+  try {
+    const { clipDuration = 5, maxClips = 50, userId = null, uploadId = null ,
+      filters = {}} = options;
+
+    await updateJobProgress(jobId, 30, 'Analyzing video...');
+
+    // === ffmpeg/generación de clips ===
+    logger.info(`Generating clips for ${jobId}...`);
+    
+    // Leer efectos de la base de datos si hay uploadId, o usar los efectos del request
+    let effects = options.effects || {};
+    let overlays = options.overlays || {};
+    
+    if (uploadId && (!effects || Object.keys(effects).length === 0)) {
+      try {
+        const effectsService = require('./effects.service');
+        const effectsConfig = await effectsService.getEffectsFromDatabase(uploadId);
+        effects = effectsConfig.effects || {};
+        overlays = effectsConfig.overlays || {};
+        
+        logger.info(`Loaded effects for upload ${uploadId}:`, { effects, overlays });
+      } catch (error) {
+        logger.warn(`Could not load effects for upload ${uploadId}:`, error.message);
+      }
+    }
+    
+    logger.info(`Using effects and overlays:`, { effects, overlays });
+    
+    const clips = await ffmpegHelper.createStoryClips(inputPath, workDir, {
+      clipDuration,
+      maxClips,
+      quality: 'high',
+      randomOffset: false,
+      effects: effects,
+      overlays: overlays
+    });
+
+    logger.info(`Generated ${clips.length} clips for ${jobId}`);
+    await updateJobProgress(jobId, 90, 'Exporting clips...');
+
+    // === Finalize: mover a OUTPUT_ROOT/{jobId} y construir artifacts ===
+    const outDir = path.join(OUTPUT_ROOT, jobId);
+    await fs.ensureDir(outDir);
+
+    const artifacts = [];
+    
+    for (let i = 0; i < clips.length; i++) {
+      const n = String(i + 1).padStart(3, '0');
+      const src = path.join(workDir, `clip_${n}.mp4`);
+      const dst = path.join(outDir, `clip_${n}.mp4`);
+
+      if (await fs.pathExists(src)) {
+        try {
+          await fs.rename(src, dst);
+        } catch (renameErr) {
+          logger.warn(`Rename failed for clip ${n}, copying...`);
+          await fs.copyFile(src, dst);
+          await fs.unlink(src).catch(() => {});
+        }
+
+        // Asegurar permisos para Nginx
+        await fs.chmod(dst, 0o644).catch(() => {});
+
+        // Obtener tamaño del archivo
+        const stats = await fs.stat(dst);
+
+        artifacts.push({
+          id: `clip_${n}`,
+          type: 'video',
+          filename: `clip_${n}.mp4`,
+          url: `${CDN_BASE}/${jobId}/clip_${n}.mp4`,
+          format: 'mp4',
+          size: stats.size,
+          duration: clipDuration
+        });
+      } else {
+        logger.warn(`Clip ${n} not found in workDir: ${src}`);
+      }
+    }
+
+    // Asegurar permisos del output dir
+    await fs.chmod(outDir, 0o755).catch(() => {});
+
+    if (artifacts.length === 0) {
+      throw new Error('No clips were generated');
+    }
+
+    const outputUrls = artifacts.map(a => a.url);
+
+    // Marcar job como completado en DB con progress=100
+    await db.run(`
+      UPDATE jobs
+      SET status = 'done',
+          progress = 100,
+          error_msg = ?,
+          output_urls = ?,
+          finished_at = ?
+      WHERE job_id = ?
+    `, [
+      `Job completed successfully - ${artifacts.length} clips generated`,
+      JSON.stringify(outputUrls),
+      new Date().toISOString(),
+      jobId
+    ]);
+
+    logger.success(`Job ${jobId} completed with ${artifacts.length} clips`);
+
+    // Limpieza del workDir (best effort)
+    await fs.remove(workDir).catch(err => {
+      logger.warn(`Failed to cleanup workDir for ${jobId}:`, err.message);
+    });
+
+    return {
+      jobId,
+      status: 'done',
+      progress: 100,
+      artifacts
+    };
+
+  } catch (err) {
+    logger.error(`[pipeline] error for ${jobId}:`, err?.message || err);
+
+    await db.run(`
+      UPDATE jobs
+      SET status = 'error',
+          error_msg = ?,
+          finished_at = ?
+      WHERE job_id = ?
+    `, [`Processing error: ${err?.message || err}`, new Date().toISOString(), jobId]);
+
+    throw err;
+  }
+}
+
+/**
+ * Crear job en DB
+ */
+async function createJob({ jobId, userId = null, path = 'api', source = 'user', status = 'queued', progress = 0, message = null, inputJson = null }) {
+  await db.run(`
+    INSERT INTO jobs (job_id, user_id, path, source, status, progress, error_msg, input_json, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [jobId, userId, path, source, status, progress, message, inputJson, new Date().toISOString()]);
+
+  logger.info(`Job ${jobId} created with status: ${status}, progress: ${progress}`);
+}
+
+/**
+ * Actualizar progreso del job
+ */
+async function updateJobProgress(jobId, progress, message = null) {
+  await db.run(`
+    UPDATE jobs
+    SET progress = ?,
+        error_msg = ?
+    WHERE job_id = ?
+  `, [progress, message, jobId]);
+
+  logger.info(`Job ${jobId} progress: ${progress}% - ${message || ''}`);
+}
+
+/**
+ * Obtener status del job desde DB + verificar archivos físicos
+ */
+async function getJobStatus(jobId) {
+  const job = await db.get(`
+    SELECT job_id, status, progress, error_msg as message, output_urls, created_at, finished_at
+    FROM jobs
+    WHERE job_id = ?
+  `, [jobId]);
+
+  if (!job) {
+    return null;
+  }
+
+  // Parsear output_urls si existe
+  let artifacts = [];
+  if (job.output_urls) {
+    try {
+      const urls = JSON.parse(job.output_urls);
+      artifacts = urls.map((url, idx) => ({
+        id: `clip_${String(idx + 1).padStart(3, '0')}`,
+        url,
+        type: 'video',
+        format: 'mp4'
+      }));
+    } catch (e) {
+      logger.warn(`Failed to parse output_urls for job ${jobId}:`, e.message);
+    }
+  }
+
+  // Si el job está completado, verificar físicamente los archivos
+  if (job.status === 'done' && artifacts.length === 0) {
+    const outDir = path.join(OUTPUT_ROOT, jobId);
+    
+    if (await fs.pathExists(outDir)) {
+      try {
+        const files = await fs.readdir(outDir);
+        const clipFiles = files.filter(f => /^clip_\d{3}\.mp4$/.test(f)).sort();
+        
+        artifacts = await Promise.all(clipFiles.map(async (filename, idx) => {
+          const filePath = path.join(outDir, filename);
+          const stats = await fs.stat(filePath);
+          
+          return {
+            id: `clip_${String(idx + 1).padStart(3, '0')}`,
+            url: `${CDN_BASE}/${jobId}/${filename}`,
+            type: 'video',
+            format: 'mp4',
+            filename,
+            size: stats.size
+          };
+        }));
+
+        logger.info(`Found ${artifacts.length} clips in filesystem for job ${jobId}`);
+      } catch (e) {
+        logger.warn(`Failed to read clips from filesystem for job ${jobId}:`, e.message);
+      }
+    }
+  }
+
+  // Normalizar URLs con Metricool si hay artifacts
+  if (artifacts.length > 0) {
+    try {
+      logger.info(`Normalizing ${artifacts.length} URLs with Metricool for job ${jobId}`);
+      artifacts = await metricoolService.normalizeClipUrls(artifacts);
+    } catch (normalizeError) {
+      logger.error(`Error normalizing URLs for job ${jobId}, using original URLs:`, normalizeError.message);
+    }
+  }
+
+  return {
+    id: job.job_id,
+    status: job.status,
+    progress: job.progress || 0,
+    message: job.message || '',
+    result: artifacts.length > 0 ? { artifacts } : null,
+    outputs: artifacts.length > 0 ? artifacts.map(a => a.normalizedUrl || a.url) : null,
+    totalClips: artifacts.length,
+    createdAt: job.created_at,
+    finishedAt: job.finished_at
+  };
+}
+
+module.exports = {
+  startProcess,
+  getJobStatus,
+  createJob,
+  updateJobProgress
+};

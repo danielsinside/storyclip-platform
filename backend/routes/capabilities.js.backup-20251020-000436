@@ -1,0 +1,156 @@
+const express = require('express');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
+const fs = require('fs');
+const path = require('path');
+
+const router = express.Router();
+
+// Cache para las capacidades (se actualiza cada 5 minutos)
+let capabilitiesCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+async function getFFmpegCapabilities() {
+  try {
+    // Verificar versión de FFmpeg
+    const { stdout: versionOutput } = await execAsync('ffmpeg -version | head -4');
+    const versionMatch = versionOutput.match(/ffmpeg version ([^\s]+)/);
+    const version = versionMatch ? versionMatch[1] : 'unknown';
+
+    // Verificar codecs disponibles
+    const { stdout: codecsOutput } = await execAsync('ffmpeg -hide_banner -codecs 2>/dev/null | grep -E "libx264|libx265|libaom|dav1d" || true');
+    const codecs = {
+      x264: codecsOutput.includes('libx264'),
+      x265: codecsOutput.includes('libx265'),
+      av1_aom: codecsOutput.includes('libaom'),
+      av1_svt: codecsOutput.includes('svtav1'),
+      dav1d: codecsOutput.includes('dav1d')
+    };
+
+    // Verificar filtros disponibles
+    const { stdout: filtersOutput } = await execAsync('ffmpeg -hide_banner -filters 2>/dev/null | grep -E "zoompan|tblend|minterpolate|frei0r|vmaf|vidstab|eq|curves|lagfun" || true');
+    const filters = [];
+    if (filtersOutput.includes('zoompan')) filters.push('zoompan');
+    if (filtersOutput.includes('tblend')) filters.push('tblend');
+    if (filtersOutput.includes('minterpolate')) filters.push('minterpolate');
+    if (filtersOutput.includes('frei0r')) filters.push('frei0r');
+    if (filtersOutput.includes('vmaf')) filters.push('vmaf');
+    if (filtersOutput.includes('vidstab')) filters.push('vidstab');
+    if (filtersOutput.includes('eq')) filters.push('eq');
+    if (filtersOutput.includes('curves')) filters.push('curves');
+    if (filtersOutput.includes('lagfun')) filters.push('lagfun');
+
+    return {
+      engine: 'ffmpeg',
+      version,
+      codecs,
+      filters,
+      presets: [
+        'storyclip_fast',
+        'storyclip_quality', 
+        'storyclip_social_916',
+        'storyclip_av1',
+        'storyclip_av1_fast',
+        'storyclip_stabilized',
+        'storyclip_vmaf_quality'
+      ],
+      optimizations: {
+        cpu: 'znver3',
+        threads: 'auto',
+        avx: true,
+        avx2: true
+      }
+    };
+  } catch (error) {
+    console.error('Error getting FFmpeg capabilities:', error);
+    return {
+      engine: 'ffmpeg',
+      version: 'unknown',
+      codecs: {},
+      filters: [],
+      presets: [],
+      error: error.message
+    };
+  }
+}
+
+// Endpoint para obtener capacidades
+router.get('/capabilities', async (req, res) => {
+  try {
+    const now = Date.now();
+    
+    // Usar cache si está disponible y no ha expirado
+    if (capabilitiesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+      return res.json(capabilitiesCache);
+    }
+
+    // Obtener capacidades frescas
+    const capabilities = await getFFmpegCapabilities();
+    
+    // Actualizar cache
+    capabilitiesCache = capabilities;
+    cacheTimestamp = now;
+
+    res.json(capabilities);
+  } catch (error) {
+    console.error('Error in capabilities endpoint:', error);
+    res.status(500).json({
+      error: 'Failed to get capabilities',
+      message: error.message
+    });
+  }
+});
+
+// Endpoint para obtener presets disponibles
+router.get('/presets', (req, res) => {
+  try {
+    const presetsPath = path.join(__dirname, '../presets/ffmpeg_presets.json');
+    
+    if (!fs.existsSync(presetsPath)) {
+      return res.status(404).json({ error: 'Presets file not found' });
+    }
+
+    const presets = JSON.parse(fs.readFileSync(presetsPath, 'utf8'));
+    res.json(presets);
+  } catch (error) {
+    console.error('Error loading presets:', error);
+    res.status(500).json({
+      error: 'Failed to load presets',
+      message: error.message
+    });
+  }
+});
+
+// Endpoint para obtener un preset específico
+router.get('/presets/:id', (req, res) => {
+  try {
+    const presetsPath = path.join(__dirname, '../presets/ffmpeg_presets.json');
+    
+    if (!fs.existsSync(presetsPath)) {
+      return res.status(404).json({ error: 'Presets file not found' });
+    }
+
+    const presets = JSON.parse(fs.readFileSync(presetsPath, 'utf8'));
+    const preset = presets.find(p => p.id === req.params.id);
+    
+    if (!preset) {
+      return res.status(404).json({ error: 'Preset not found' });
+    }
+
+    res.json(preset);
+  } catch (error) {
+    console.error('Error loading preset:', error);
+    res.status(500).json({
+      error: 'Failed to load preset',
+      message: error.message
+    });
+  }
+});
+
+module.exports = router;
+
+
+
+

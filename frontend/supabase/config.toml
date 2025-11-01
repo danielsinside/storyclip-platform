@@ -1,0 +1,37 @@
+project_id = "kixjikosjlyozbnyvhua"
+
+[functions.metricool-publish]
+verify_jwt = false
+
+[functions.metricool-blogs]
+verify_jwt = false
+
+[functions.metricool-brands]
+verify_jwt = false
+
+[functions.generate-preset]
+verify_jwt = false
+
+[functions.generate-audio-profile]
+verify_jwt = false
+
+[functions.generate-filter]
+verify_jwt = false
+
+[functions.generate-overlay]
+verify_jwt = false
+
+[functions.generate-clip-indicator]
+verify_jwt = false
+
+[functions.generate-camera-movement]
+verify_jwt = false
+
+[functions.analyze-edits]
+verify_jwt = false
+
+[functions.storyclip-proxy]
+verify_jwt = false
+
+[functions.metricool-proxy]
+verify_jwt = false

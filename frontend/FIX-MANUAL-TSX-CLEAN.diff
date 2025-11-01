@@ -1,0 +1,40 @@
+--- a/src/pages/Manual.tsx
++++ b/src/pages/Manual.tsx
+@@ -963,7 +963,7 @@
+             } : {})
+           }
+         })),
+-        ...(filterType !== 'none' ? {
++        // REMOVIDO: Duplicación de efectos en filters - los efectos ya están en clips[].effects
++        /* ...(filterType !== 'none' ? {
+           filters: {
+             color: {
+               brightness: 0.05,
+@@ -972,7 +972,7 @@
+             },
+             mirrorHorizontal: horizontalFlip
+           }
+-        } : {}),
++        } : {}), */
+         ...(overlayType !== 'none' ? {
+           overlays: {
+             type: overlayType,
+@@ -998,7 +998,7 @@
+         metadata: {
+           title,
+           description,
+           keywords,
+           seed,
+-          delayMode,
+-          visual: {
+-            mirrorHorizontal: horizontalFlip,
+-            indicator: clipIndicator !== 'none'
+-          }
++          delayMode
++          // REMOVIDO: Duplicación de efectos en metadata.visual - los efectos ya están en clips[].effects
++          /* visual: {
++            mirrorHorizontal: horizontalFlip,
++            indicator: clipIndicator !== 'none'
++          } */
+         }
+       };

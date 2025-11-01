@@ -1,0 +1,39 @@
+{
+  "items": [
+    {
+      "clipIndex": 0,
+      "title": "Amazing Intro Hook",
+      "duration": 8.5,
+      "seed": "cinematica",
+      "url": "https://cdn.example.com/clip_0.mp4"
+    },
+    {
+      "clipIndex": 1,
+      "title": "Key Point #1",
+      "duration": 12.3,
+      "seed": "cinematica",
+      "url": "https://cdn.example.com/clip_1.mp4"
+    },
+    {
+      "clipIndex": 2,
+      "title": "Transition Moment",
+      "duration": 7.8,
+      "seed": "cinematica",
+      "url": "https://cdn.example.com/clip_2.mp4"
+    },
+    {
+      "clipIndex": 3,
+      "title": "Main Content",
+      "duration": 15.2,
+      "seed": "viral",
+      "url": "https://cdn.example.com/clip_3.mp4"
+    },
+    {
+      "clipIndex": 4,
+      "title": "Call to Action",
+      "duration": 9.1,
+      "seed": "impacto",
+      "url": "https://cdn.example.com/clip_4.mp4"
+    }
+  ]
+}

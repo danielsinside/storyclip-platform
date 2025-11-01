@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Conexión Lovable → Backend StoryClip</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .code {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Test de Conexión: Lovable → Backend StoryClip</h1>
+
+        <p>Esta página te ayudará a diagnosticar problemas de conexión entre tu frontend de Lovable y el backend de StoryClip.</p>
+
+        <div class="test-section">
+            <h3>Test 1: Verificar Variables de Entorno</h3>
+            <div id="envTest" class="result info">Ejecutando...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Health Check del Backend</h3>
+            <button onclick="testHealthCheck()">Ejecutar Health Check</button>
+            <div id="healthTest" class="result info" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Test de CORS</h3>
+            <button onclick="testCORS()">Ejecutar Test CORS</button>
+            <div id="corsTest" class="result info" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: Upload Test (Simulado)</h3>
+            <button onclick="testUpload()">Simular Upload</button>
+            <div id="uploadTest" class="result info" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Configuración Recomendada</h3>
+            <div class="code">
+VITE_STORYCLIP_BASE=https://story.creatorsflow.app
+VITE_STORYCLIP_CDN=https://story.creatorsflow.app/outputs
+VITE_STORYCLIP_API_KEY=sk_prod_21000fdf3489bf37c0c48391e20c00947b125c3fd7bbf6f0
+VITE_STORYCLIP_POLL_MS=2500
+VITE_STORYCLIP_PROCESS_TIMEOUT_MS=900000
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Verificar variables de entorno
+        function testEnvVariables() {
+            const envTest = document.getElementById('envTest');
+
+            const vars = {
+                'VITE_STORYCLIP_BASE': import.meta?.env?.VITE_STORYCLIP_BASE,
+                'VITE_STORYCLIP_CDN': import.meta?.env?.VITE_STORYCLIP_CDN,
+                'VITE_STORYCLIP_API_KEY': import.meta?.env?.VITE_STORYCLIP_API_KEY,
+            };
+
+            let html = '<strong>Variables de Entorno:</strong><br>';
+            let allOk = true;
+
+            for (const [key, value] of Object.entries(vars)) {
+                if (value) {
+                    html += `✅ ${key}: ${value.substring(0, 30)}...<br>`;
+                } else {
+                    html += `❌ ${key}: NO CONFIGURADA<br>`;
+                    allOk = false;
+                }
+            }
+
+            if (allOk) {
+                envTest.className = 'result success';
+                html += '<br><strong>✅ Todas las variables están configuradas correctamente</strong>';
+            } else {
+                envTest.className = 'result error';
+                html += '<br><strong>❌ Faltan variables. Configúralas en Lovable Settings → Environment Variables</strong>';
+            }
+
+            envTest.innerHTML = html;
+        }
+
+        // Test 2: Health Check
+        async function testHealthCheck() {
+            const healthTest = document.getElementById('healthTest');
+            healthTest.style.display = 'block';
+            healthTest.className = 'result info';
+            healthTest.innerHTML = '⏳ Conectando al backend...';
+
+            const baseURL = import.meta?.env?.VITE_STORYCLIP_BASE || 'https://story.creatorsflow.app';
+
+            try {
+                const response = await fetch(`${baseURL}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    healthTest.className = 'result success';
+                    healthTest.innerHTML = `
+                        <strong>✅ Conexión Exitosa!</strong><br>
+                        Status: ${data.status}<br>
+                        Version: ${data.version}<br>
+                        Uptime: ${Math.floor(data.uptime / 60)} minutos<br>
+                        <br>
+                        <strong>El backend está funcionando correctamente.</strong>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                healthTest.className = 'result error';
+                healthTest.innerHTML = `
+                    <strong>❌ Error de Conexión</strong><br>
+                    Error: ${error.message}<br>
+                    <br>
+                    Posibles causas:<br>
+                    • Variables de entorno incorrectas<br>
+                    • Backend no disponible<br>
+                    • Problema de red/firewall
+                `;
+            }
+        }
+
+        // Test 3: CORS
+        async function testCORS() {
+            const corsTest = document.getElementById('corsTest');
+            corsTest.style.display = 'block';
+            corsTest.className = 'result info';
+            corsTest.innerHTML = '⏳ Probando CORS...';
+
+            const baseURL = import.meta?.env?.VITE_STORYCLIP_BASE || 'https://story.creatorsflow.app';
+
+            try {
+                const response = await fetch(`${baseURL}/api/health`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                };
+
+                if (corsHeaders['Access-Control-Allow-Origin']) {
+                    corsTest.className = 'result success';
+                    corsTest.innerHTML = `
+                        <strong>✅ CORS Configurado Correctamente!</strong><br>
+                        Origin: ${window.location.origin}<br>
+                        Allowed Origin: ${corsHeaders['Access-Control-Allow-Origin']}<br>
+                        Allowed Methods: ${corsHeaders['Access-Control-Allow-Methods']}<br>
+                        <br>
+                        <strong>Tu dominio de Lovable está permitido.</strong>
+                    `;
+                } else {
+                    throw new Error('Headers CORS no encontrados');
+                }
+            } catch (error) {
+                corsTest.className = 'result error';
+                corsTest.innerHTML = `
+                    <strong>❌ Error de CORS</strong><br>
+                    Error: ${error.message}<br>
+                    Origin: ${window.location.origin}<br>
+                    <br>
+                    Tu dominio de Lovable puede no estar en la lista de permitidos.<br>
+                    Envía esta URL al administrador: <strong>${window.location.origin}</strong>
+                `;
+            }
+        }
+
+        // Test 4: Upload simulado
+        async function testUpload() {
+            const uploadTest = document.getElementById('uploadTest');
+            uploadTest.style.display = 'block';
+            uploadTest.className = 'result info';
+            uploadTest.innerHTML = '⏳ Probando endpoint de upload...';
+
+            const baseURL = import.meta?.env?.VITE_STORYCLIP_BASE || 'https://story.creatorsflow.app';
+
+            try {
+                // Crear un blob vacío como prueba
+                const formData = new FormData();
+                const blob = new Blob(['test'], { type: 'video/mp4' });
+                formData.append('file', blob, 'test.mp4');
+
+                const response = await fetch(`${baseURL}/api/videos/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok || response.status === 400) {
+                    // 400 es esperado porque estamos enviando un archivo vacío
+                    uploadTest.className = 'result success';
+                    uploadTest.innerHTML = `
+                        <strong>✅ Endpoint de Upload Accesible!</strong><br>
+                        Status: ${response.status}<br>
+                        Response: ${JSON.stringify(data).substring(0, 100)}...<br>
+                        <br>
+                        <strong>El endpoint responde correctamente.</strong><br>
+                        (Es normal que rechace el archivo vacío de prueba)
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                uploadTest.className = 'result error';
+                uploadTest.innerHTML = `
+                    <strong>❌ Error en Upload</strong><br>
+                    Error: ${error.message}<br>
+                    <br>
+                    El endpoint de upload no está accesible.
+                `;
+            }
+        }
+
+        // Ejecutar test de variables automáticamente al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            testEnvVariables();
+        });
+    </script>
+</body>
+</html>

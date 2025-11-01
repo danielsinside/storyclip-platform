@@ -1,0 +1,30 @@
+groups:
+- name: storyclip-slos
+  rules:
+  # SLO: Disponibilidad API ≥ 99.9%
+  - record: storyclip_api_availability
+    expr: avg_over_time(up{job="storyclip-backend"}[5m])
+    labels:
+      slo: "api_availability"
+      target: "99.9%"
+  
+  # SLO: Tasa de fallos < 0.5%
+  - record: storyclip_error_rate
+    expr: rate(storyclip_jobs_failed_total[15m]) / (rate(storyclip_jobs_created_total[15m]) + 1e-9)
+    labels:
+      slo: "error_rate"
+      target: "<0.5%"
+  
+  # SLO: Latencia P90 por preset
+  - record: storyclip_latency_p90
+    expr: histogram_quantile(0.9, sum(rate(storyclip_job_duration_seconds_bucket[5m])) by (le, preset))
+    labels:
+      slo: "latency_p90"
+      target: "<30s"
+  
+  # SLO: Throughput mínimo
+  - record: storyclip_throughput
+    expr: rate(storyclip_jobs_completed_total[5m])
+    labels:
+      slo: "throughput"
+      target: ">0.1/s"

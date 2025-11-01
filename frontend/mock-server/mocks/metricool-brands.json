@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "brandId": "brand_123",
+      "name": "My Tech Page",
+      "network": "facebook",
+      "timezone": "America/Los_Angeles"
+    },
+    {
+      "brandId": "brand_456",
+      "name": "Lifestyle Stories",
+      "network": "instagram",
+      "timezone": "Europe/Madrid"
+    }
+  ]
+}

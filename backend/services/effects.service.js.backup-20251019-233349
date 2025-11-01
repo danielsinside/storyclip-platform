@@ -1,0 +1,342 @@
+/**
+ * Servicio de efectos visuales
+ * Maneja la aplicación de filtros, overlays y efectos a los videos
+ */
+
+const path = require('path');
+const fs = require('fs-extra');
+const logger = require('../utils/logger');
+
+class EffectsService {
+  constructor() {
+    this.effectsDir = '/srv/storyclip/effects';
+    this.overlaysDir = '/srv/storyclip/overlays';
+  }
+
+  /**
+   * Aplicar efectos a un video usando FFmpeg
+   * @param {string} inputPath - Ruta del video de entrada
+   * @param {string} outputPath - Ruta del video de salida
+   * @param {Object} effects - Configuración de efectos
+   * @param {Object} options - Opciones de procesamiento
+   */
+  async applyEffects(inputPath, outputPath, effects = {}, options = {}) {
+    try {
+      logger.info('Applying effects to video:', effects);
+
+      // Construir filtros FFmpeg
+      const filters = this.buildFFmpegFilters(effects, options);
+      
+      // Si no hay efectos, usar procesamiento básico
+      if (!filters || filters.length === 0) {
+        return await this.applyBasicProcessing(inputPath, outputPath, options);
+      }
+
+      // Aplicar efectos con FFmpeg
+      return await this.applyFFmpegEffects(inputPath, outputPath, filters, options);
+
+    } catch (error) {
+      logger.error('Error applying effects:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Construir filtros FFmpeg basados en la configuración de efectos
+   */
+  buildFFmpegFilters(effects, options) {
+    const filters = [];
+
+    // Filtro de zoom/pan
+    if (effects.zoompan && effects.zoompan.enabled) {
+      const zoom = effects.zoompan.zoom || 1.2;
+      const duration = (effects.zoompan.duration || 5) * 30; // Convertir a frames
+      filters.push(`zoompan=z='${zoom}':d=${duration}:x='iw/2':y='ih/2'`);
+    }
+
+    // Filtros de color
+    if (effects.color && effects.color.enabled) {
+      const brightness = effects.color.brightness || 0;
+      const contrast = effects.color.contrast || 1.0;
+      const saturation = effects.color.saturation || 1.0;
+      const hue = effects.color.hue || 0;
+      
+      filters.push(`eq=brightness=${brightness}:contrast=${contrast}:saturation=${saturation}:hue=${hue}`);
+    }
+
+    // Filtro de blur
+    if (effects.blur && effects.blur.enabled) {
+      const amount = effects.blur.amount || 0.5;
+      filters.push(`gblur=sigma=${amount}`);
+    }
+
+    // Filtro de estabilización
+    if (effects.stabilization && effects.stabilization.enabled) {
+      const strength = effects.stabilization.strength || 0.8;
+      filters.push(`vidstabdetect=stepsize=6:shakiness=8:accuracy=9:result=transforms.trf`);
+      filters.push(`vidstabtransform=smoothing=${strength}:input=transforms.trf`);
+    }
+
+    // Filtro de flip
+    if (effects.flip && effects.flip.enabled) {
+      const direction = effects.flip.direction || 'horizontal';
+      if (direction === 'horizontal') {
+        filters.push('hflip');
+      } else if (direction === 'vertical') {
+        filters.push('vflip');
+      }
+    }
+
+    // Filtro de escala y recorte
+    if (options.aspectRatio && options.resolution) {
+      const [width, height] = options.resolution.split('x').map(Number);
+      filters.push(`scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black`);
+    }
+
+    return filters;
+  }
+
+  /**
+   * Aplicar overlays al video
+   */
+  async applyOverlays(inputPath, outputPath, overlays = {}, options = {}) {
+    try {
+      const ffmpeg = require('fluent-ffmpeg');
+      
+      // Preparar inputs para FFmpeg
+      const inputs = [inputPath];
+      const filterComplex = [];
+
+      // Overlay de texto
+      if (overlays.text && overlays.text.enabled) {
+        const text = overlays.text.content || '';
+        const position = this.getTextPosition(overlays.text.position || 'bottom');
+        const color = overlays.text.color || 'white';
+        const size = overlays.text.size || 24;
+        
+        filterComplex.push(`drawtext=text='${text}':fontsize=${size}:fontcolor=${color}:x=${position.x}:y=${position.y}`);
+      }
+
+      // Overlay de imagen/watermark
+      if (overlays.watermark && overlays.watermark.enabled) {
+        const watermarkPath = await this.downloadOverlay(overlays.watermark.image);
+        inputs.push(watermarkPath);
+        
+        const position = this.getOverlayPosition(overlays.watermark.position || 'top-right');
+        const opacity = overlays.watermark.opacity || 0.7;
+        
+        filterComplex.push(`[0:v][1:v]overlay=${position.x}:${position.y}:format=auto:alpha=${opacity}`);
+      }
+
+      // Overlay VS
+      if (overlays.vs && overlays.vs.enabled) {
+        const label = overlays.vs.label || 'VS';
+        const style = overlays.vs.style || 'center_glow';
+        
+        if (style === 'center_glow') {
+          filterComplex.push(`drawtext=text='${label}':fontsize=48:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2:shadowcolor=black:shadowx=2:shadowy=2`);
+        }
+      }
+
+      // Si no hay overlays, usar procesamiento básico
+      if (filterComplex.length === 0) {
+        return await this.applyBasicProcessing(inputPath, outputPath, options);
+      }
+
+      // Aplicar overlays con FFmpeg
+      return new Promise((resolve, reject) => {
+        let command = ffmpeg();
+        
+        // Agregar inputs
+        inputs.forEach(input => {
+          command = command.input(input);
+        });
+
+        command
+          .complexFilter(filterComplex.join(';'))
+          .outputOptions([
+            '-preset fast',
+            '-crf 23',
+            '-pix_fmt yuv420p'
+          ])
+          .on('start', (commandLine) => {
+            logger.debug('FFmpeg overlay command:', commandLine);
+          })
+          .on('end', () => {
+            logger.info('Overlays applied successfully');
+            resolve();
+          })
+          .on('error', (err) => {
+            logger.error('FFmpeg overlay error:', err.message);
+            reject(err);
+          })
+          .save(outputPath);
+      });
+
+    } catch (error) {
+      logger.error('Error applying overlays:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Aplicar procesamiento básico sin efectos
+   */
+  async applyBasicProcessing(inputPath, outputPath, options = {}) {
+    const ffmpeg = require('fluent-ffmpeg');
+    
+    return new Promise((resolve, reject) => {
+      const [width, height] = (options.resolution || '720x1280').split('x').map(Number);
+      
+      ffmpeg(inputPath)
+        .size(`${width}x${height}`)
+        .aspect(options.aspectRatio || '9:16')
+        .fps(options.fps || 30)
+        .videoCodec(options.videoCodec || 'libx264')
+        .audioCodec(options.audioCodec || 'aac')
+        .videoBitrate(options.videoBitrate || '2000k')
+        .audioBitrate(options.audioBitrate || '128k')
+        .format(options.format || 'mp4')
+        .outputOptions([
+          `-preset ${options.preset || 'fast'}`,
+          `-crf ${options.crf || 23}`,
+          '-movflags +faststart',
+          '-pix_fmt yuv420p'
+        ])
+        .on('start', (commandLine) => {
+          logger.debug('FFmpeg basic command:', commandLine);
+        })
+        .on('end', () => {
+          logger.info('Basic processing completed');
+          resolve();
+        })
+        .on('error', (err) => {
+          logger.error('FFmpeg basic error:', err.message);
+          reject(err);
+        })
+        .save(outputPath);
+    });
+  }
+
+  /**
+   * Aplicar efectos con FFmpeg usando filtros complejos
+   */
+  async applyFFmpegEffects(inputPath, outputPath, filters, options = {}) {
+    const ffmpeg = require('fluent-ffmpeg');
+    
+    return new Promise((resolve, reject) => {
+      const [width, height] = (options.resolution || '720x1280').split('x').map(Number);
+      
+      ffmpeg(inputPath)
+        .size(`${width}x${height}`)
+        .aspect(options.aspectRatio || '9:16')
+        .fps(options.fps || 30)
+        .videoCodec(options.videoCodec || 'libx264')
+        .audioCodec(options.audioCodec || 'aac')
+        .videoBitrate(options.videoBitrate || '2000k')
+        .audioBitrate(options.audioBitrate || '128k')
+        .format(options.format || 'mp4')
+        .videoFilters(filters)
+        .outputOptions([
+          `-preset ${options.preset || 'fast'}`,
+          `-crf ${options.crf || 23}`,
+          '-movflags +faststart',
+          '-pix_fmt yuv420p'
+        ])
+        .on('start', (commandLine) => {
+          logger.debug('FFmpeg effects command:', commandLine);
+        })
+        .on('end', () => {
+          logger.info('Effects applied successfully');
+          resolve();
+        })
+        .on('error', (err) => {
+          logger.error('FFmpeg effects error:', err.message);
+          reject(err);
+        })
+        .save(outputPath);
+    });
+  }
+
+  /**
+   * Obtener posición de texto
+   */
+  getTextPosition(position) {
+    const positions = {
+      'top': { x: '(w-text_w)/2', y: '20' },
+      'center': { x: '(w-text_w)/2', y: '(h-text_h)/2' },
+      'bottom': { x: '(w-text_w)/2', y: 'h-text_h-20' },
+      'top-left': { x: '20', y: '20' },
+      'top-right': { x: 'w-text_w-20', y: '20' },
+      'bottom-left': { x: '20', y: 'h-text_h-20' },
+      'bottom-right': { x: 'w-text_w-20', y: 'h-text_h-20' }
+    };
+    
+    return positions[position] || positions['bottom'];
+  }
+
+  /**
+   * Obtener posición de overlay
+   */
+  getOverlayPosition(position) {
+    const positions = {
+      'top-left': { x: '10', y: '10' },
+      'top-right': { x: 'W-w-10', y: '10' },
+      'bottom-left': { x: '10', y: 'H-h-10' },
+      'bottom-right': { x: 'W-w-10', y: 'H-h-10' },
+      'center': { x: '(W-w)/2', y: '(H-h)/2' }
+    };
+    
+    return positions[position] || positions['top-right'];
+  }
+
+  /**
+   * Descargar overlay de imagen
+   */
+  async downloadOverlay(imageUrl) {
+    try {
+      const axios = require('axios');
+      const response = await axios.get(imageUrl, { responseType: 'stream' });
+      
+      const overlayPath = path.join(this.overlaysDir, `overlay_${Date.now()}.png`);
+      await fs.ensureDir(this.overlaysDir);
+      
+      const writer = fs.createWriteStream(overlayPath);
+      response.data.pipe(writer);
+      
+      return new Promise((resolve, reject) => {
+        writer.on('finish', () => resolve(overlayPath));
+        writer.on('error', reject);
+      });
+    } catch (error) {
+      logger.error('Error downloading overlay:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Leer efectos de la base de datos
+   */
+  async getEffectsFromDatabase(storyId) {
+    try {
+      const db = require('../database/db');
+      
+      // Buscar efectos en la base de datos
+      const effects = await db.get(
+        'SELECT effects FROM video_sessions WHERE story_id = ?',
+        [storyId]
+      );
+      
+      if (effects && effects.effects) {
+        return JSON.parse(effects.effects);
+      }
+      
+      return {};
+    } catch (error) {
+      logger.error('Error reading effects from database:', error);
+      return {};
+    }
+  }
+}
+
+module.exports = new EffectsService();

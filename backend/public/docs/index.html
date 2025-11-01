@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Técnica - StoryClip</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #e2e8f0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+        }
+
+        header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+
+        .content {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 {
+            color: #60a5fa;
+            font-size: 2rem;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        h2 {
+            color: #7dd3fc;
+            font-size: 1.6rem;
+            margin: 30px 0 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        h3 {
+            color: #93c5fd;
+            font-size: 1.3rem;
+            margin: 25px 0 10px 0;
+        }
+
+        h4 {
+            color: #bfdbfe;
+            font-size: 1.1rem;
+            margin: 20px 0 10px 0;
+        }
+
+        h5 {
+            color: #dbeafe;
+            font-size: 1rem;
+            margin: 15px 0 8px 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+
+        a {
+            color: #60a5fa;
+            text-decoration: none;
+            border-bottom: 1px dotted #60a5fa;
+        }
+
+        a:hover {
+            color: #93c5fd;
+            border-bottom-color: #93c5fd;
+        }
+
+        code {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #f472b6;
+            border: 1px solid rgba(244, 114, 182, 0.2);
+        }
+
+        pre {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #e2e8f0;
+        }
+
+        ul, ol {
+            margin: 15px 0 15px 30px;
+            color: #cbd5e1;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #cbd5e1;
+        }
+
+        tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        blockquote {
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 0 8px 8px 0;
+            color: #cbd5e1;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid rgba(59, 130, 246, 0.3);
+            margin: 40px 0;
+        }
+
+        .toc {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .toc h2 {
+            border: none;
+            padding: 0;
+            margin-top: 0;
+        }
+
+        /* Badges and labels */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #60a5fa;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .content {
+                background: white;
+                box-shadow: none;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            header {
+                padding: 20px 15px;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Documentación Técnica - StoryClip</h1>
+            <p>Guía completa para desarrolladores</p>
+        </header>
+
+        <div class="content">
+            <h1>DOCUMENTACIÓN TÉCNICA COMPLETA - STORYCLIP</h1>
+<blockquote>
+<p><strong>Guía técnica exhaustiva para desarrolladores</strong></p>
+<p>Versión: 1.0.0<br>Última actualización: Octubre 2025<br>Ubicación: <code>/srv/storyclip</code></p>
+</blockquote>
+<hr>
+<h2>📋 TABLA DE CONTENIDOS</h2>
+<ol>
+<li><a href="#resumen-ejecutivo">Resumen Ejecutivo</a></li>
+<li><a href="#stack-tecnol%C3%B3gico">Stack Tecnológico</a></li>
+<li><a href="#arquitectura-general">Arquitectura General</a></li>
+<li><a href="#backend-documentaci%C3%B3n">Backend - Documentación</a><ul>
+<li><a href="#endpoints-de-la-api">Endpoints de la API</a></li>
+<li><a href="#servicios">Servicios</a></li>
+<li><a href="#base-de-datos">Base de Datos</a></li>
+<li><a href="#sistema-de-colas">Sistema de Colas</a></li>
+<li><a href="#websocket">WebSocket</a></li>
+</ul>
+</li>
+<li><a href="#frontend-documentaci%C3%B3n">Frontend - Documentación</a><ul>
+<li><a href="#estructura-de-p%C3%A1ginas">Estructura de Páginas</a></li>
+<li><a href="#componentes">Componentes</a></li>
+<li><a href="#hooks-personalizados">Hooks Personalizados</a></li>
+<li><a href="#api-client">API Client</a></li>
+</ul>
+</li>
+<li><a href="#flujos-de-datos-completos">Flujos de Datos Completos</a></li>
+<li><a href="#gu%C3%ADa-de-desarrollo">Guía de Desarrollo</a></li>
+<li><a href="#despliegue-y-configuraci%C3%B3n">Despliegue y Configuración</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#glosario">Glosario</a></li>
+</ol>
+<hr>
+<h2>🎯 RESUMEN EJECUTIVO</h2>
+<p><strong>StoryClip</strong> es una plataforma de procesamiento de video que permite convertir videos largos en clips cortos optimizados para redes sociales (Instagram Stories, Facebook Stories, Reels). La aplicación ofrece:</p>
+<h3>Características Principales</h3>
+<ul>
+<li>✅ Procesamiento de video con FFmpeg (hasta 10GB)</li>
+<li>✅ Generación automática/manual de clips</li>
+<li>✅ Aplicación de filtros, efectos y overlays</li>
+<li>✅ Publicación automatizada a redes sociales (Metricool)</li>
+<li>✅ Progreso en tiempo real (WebSocket + SSE)</li>
+<li>✅ Sistema de colas para procesamiento asíncrono</li>
+<li>✅ Interfaz web intuitiva con sugerencias IA</li>
+</ul>
+<h3>Tecnología Core</h3>
+<ul>
+<li><strong>Backend</strong>: Node.js + Express + FFmpeg + Redis</li>
+<li><strong>Frontend</strong>: Next.js 15 + React 19 + TypeScript</li>
+<li><strong>Base de datos</strong>: SQLite (local) + Redis (cache/queue)</li>
+<li><strong>Procesamiento</strong>: FFmpeg 7.0.2 estático</li>
+<li><strong>Integración</strong>: Metricool API para publicación</li>
+</ul>
+<hr>
+<h2>🛠 STACK TECNOLÓGICO</h2>
+<h3>Backend (<code>/srv/storyclip</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Tecnología</th>
+<th>Versión</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Runtime</strong></td>
+<td>Node.js</td>
+<td>22.20.0</td>
+<td>Ejecución de JavaScript en servidor</td>
+</tr>
+<tr>
+<td><strong>Framework</strong></td>
+<td>Express.js</td>
+<td>4.18.2</td>
+<td>API REST</td>
+</tr>
+<tr>
+<td><strong>Procesamiento</strong></td>
+<td>FFmpeg</td>
+<td>7.0.2</td>
+<td>Procesamiento de video</td>
+</tr>
+<tr>
+<td><strong>Base de Datos</strong></td>
+<td>SQLite3</td>
+<td>5.1.6</td>
+<td>Persistencia de jobs y batches</td>
+</tr>
+<tr>
+<td><strong>Cache/Queue</strong></td>
+<td>Redis</td>
+<td>4.7.1</td>
+<td>Cola de trabajos y cache</td>
+</tr>
+<tr>
+<td><strong>Queue Manager</strong></td>
+<td>Bull</td>
+<td>4.11.3</td>
+<td>Gestión de colas con Redis</td>
+</tr>
+<tr>
+<td><strong>WebSocket</strong></td>
+<td>ws</td>
+<td>8.18.3</td>
+<td>Comunicación en tiempo real</td>
+</tr>
+<tr>
+<td><strong>Logging</strong></td>
+<td>Winston</td>
+<td>3.10.0</td>
+<td>Sistema de logs</td>
+</tr>
+<tr>
+<td><strong>Métricas</strong></td>
+<td>Prom-client</td>
+<td>15.0.0</td>
+<td>Métricas para Prometheus</td>
+</tr>
+<tr>
+<td><strong>Seguridad</strong></td>
+<td>Helmet</td>
+<td>7.0.0</td>
+<td>Headers de seguridad HTTP</td>
+</tr>
+<tr>
+<td><strong>CORS</strong></td>
+<td>cors</td>
+<td>2.8.5</td>
+<td>Cross-Origin Resource Sharing</td>
+</tr>
+<tr>
+<td><strong>Upload</strong></td>
+<td>Multer</td>
+<td>1.4.5-lts.1</td>
+<td>Manejo de uploads multipart</td>
+</tr>
+<tr>
+<td><strong>HTTP Client</strong></td>
+<td>Axios</td>
+<td>1.5.0</td>
+<td>Requests HTTP</td>
+</tr>
+<tr>
+<td><strong>Process Manager</strong></td>
+<td>PM2</td>
+<td>-</td>
+<td>Gestión de procesos en producción</td>
+</tr>
+</tbody></table>
+<h3>Frontend (<code>/srv/storyclip/frontend</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Tecnología</th>
+<th>Versión</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Framework</strong></td>
+<td>Next.js</td>
+<td>15.5.5</td>
+<td>Framework React con SSR/SSG</td>
+</tr>
+<tr>
+<td><strong>UI Library</strong></td>
+<td>React</td>
+<td>19.1.0</td>
+<td>Librería de interfaces</td>
+</tr>
+<tr>
+<td><strong>Language</strong></td>
+<td>TypeScript</td>
+<td>5</td>
+<td>Tipado estático</td>
+</tr>
+<tr>
+<td><strong>Styling</strong></td>
+<td>Tailwind CSS</td>
+<td>4</td>
+<td>Framework de utilidades CSS</td>
+</tr>
+<tr>
+<td><strong>Animations</strong></td>
+<td>Framer Motion</td>
+<td>12.23.24</td>
+<td>Animaciones fluidas</td>
+</tr>
+<tr>
+<td><strong>Icons</strong></td>
+<td>Lucide React</td>
+<td>0.545.0</td>
+<td>Iconos SVG optimizados</td>
+</tr>
+<tr>
+<td><strong>HTTP Client</strong></td>
+<td>Axios</td>
+<td>1.12.2</td>
+<td>Cliente HTTP</td>
+</tr>
+<tr>
+<td><strong>Build Tool</strong></td>
+<td>Turbopack</td>
+<td>-</td>
+<td>Bundler ultra-rápido</td>
+</tr>
+</tbody></table>
+<h3>Infraestructura</h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Tecnología</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Sistema Operativo</strong></td>
+<td>Linux</td>
+<td>Servidor Ubuntu/Debian</td>
+</tr>
+<tr>
+<td><strong>Servidor Web</strong></td>
+<td>Nginx</td>
+<td>Proxy inverso (producción)</td>
+</tr>
+<tr>
+<td><strong>Process Manager</strong></td>
+<td>PM2</td>
+<td>Gestión de procesos Node.js</td>
+</tr>
+<tr>
+<td><strong>Container</strong></td>
+<td>Docker</td>
+<td>Containerización (opcional)</td>
+</tr>
+<tr>
+<td><strong>CDN</strong></td>
+<td>CloudFlare</td>
+<td>Entrega de contenido estático</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>🏗 ARQUITECTURA GENERAL</h2>
+<h3>Diagrama de Arquitectura</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                         CLIENTE / BROWSER                        │
+│                                                                   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  Frontend (Next.js 15 + React 19)                       │    │
+│  │  https://story.creatorsflow.app/tester/                │    │
+│  │                                                           │    │
+│  │  - Upload de videos                                      │    │
+│  │  - Configuración de clips                                │    │
+│  │  - Aplicación de efectos                                 │    │
+│  │  - Preview en tiempo real                                │    │
+│  │  - Descarga de resultados                                │    │
+│  └──────────────────────┬──────────────────────────────────┘    │
+│                         │                                         │
+└─────────────────────────┼─────────────────────────────────────────┘
+                          │
+                          │ HTTPS / WebSocket
+                          │
+┌─────────────────────────┼─────────────────────────────────────────┐
+│                         ▼                                          │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  API Gateway (Express.js)                                │    │
+│  │  Puerto 3000                                              │    │
+│  │                                                            │    │
+│  │  Rutas:                                                   │    │
+│  │  - /api/videos/upload       → Upload de archivos         │    │
+│  │  - /api/process-video       → Iniciar procesamiento      │    │
+│  │  - /api/jobs/:id/status     → Estado del job             │    │
+│  │  - /api/metricool/*         → Publicación a RRSS         │    │
+│  │  - /ws                      → WebSocket real-time        │    │
+│  └──────────────────────┬───────────────────────────────────┘    │
+│                         │                                          │
+│         ┌───────────────┼───────────────┐                         │
+│         │               │               │                         │
+│         ▼               ▼               ▼                         │
+│  ┌─────────────┐ ┌────────────┐ ┌──────────────┐                │
+│  │  Middleware │ │  Services  │ │  Controllers │                │
+│  │             │ │            │ │              │                │
+│  │  - Auth     │ │  - Process │ │  - Upload    │                │
+│  │  - CORS     │ │  - Queue   │ │  - Video     │                │
+│  │  - Rate     │ │  - Download│ │  - Metricool │                │
+│  │    Limit    │ │  - Metricool│ │              │                │
+│  │  - Error    │ │  - Effects │ │              │                │
+│  └─────────────┘ └─────┬──────┘ └──────────────┘                │
+│                        │                                          │
+│         ┌──────────────┼──────────────┐                          │
+│         │              │              │                          │
+│         ▼              ▼              ▼                          │
+│  ┌─────────────┐ ┌────────────┐ ┌─────────────┐                │
+│  │   SQLite    │ │   Redis    │ │   FFmpeg    │                │
+│  │             │ │            │ │             │                │
+│  │  - Jobs     │ │  - Queues  │ │  - Process  │                │
+│  │  - Batches  │ │  - Cache   │ │    video    │                │
+│  │  - Clips    │ │  - Session │ │  - Extract  │                │
+│  │             │ │            │ │    clips    │                │
+│  └─────────────┘ └────────────┘ └─────────────┘                │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  File System                                              │   │
+│  │                                                            │   │
+│  │  /srv/storyclip/                                          │   │
+│  │  ├── uploads/          → Videos originales                │   │
+│  │  ├── work/             → Procesamiento temporal           │   │
+│  │  ├── outputs/uploads/  → Clips finales                    │   │
+│  │  └── tmp/              → Archivos temporales              │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
+                          │
+                          │ HTTPS API
+                          │
+┌─────────────────────────┼─────────────────────────────────────────┐
+│                         ▼                                          │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  Servicios Externos                                       │    │
+│  │                                                            │    │
+│  │  - Metricool API    → Publicación en RRSS                │    │
+│  │  - Facebook API     → Stories/Reels (vía Metricool)      │    │
+│  │  - Instagram API    → Stories/Reels (vía Metricool)      │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>Flujo de Procesamiento Simplificado</h3>
+<pre><code>1. Upload
+   Usuario → Frontend → Backend → /uploads/
+
+2. Process
+   Backend → Redis Queue → Worker → FFmpeg → /outputs/
+
+3. Notify
+   Worker → WebSocket → Frontend (progreso en tiempo real)
+
+4. Download
+   Frontend → Backend → Clips (ZIP o individual)
+
+5. Publish (opcional)
+   Frontend → Metricool API → Facebook/Instagram
+</code></pre>
+<hr>
+<h2>🔌 BACKEND - DOCUMENTACIÓN</h2>
+<h3>ENDPOINTS DE LA API</h3>
+<h4>1. Upload de Videos</h4>
+<h5><code>POST /api/videos/upload</code></h5>
+<p><strong>Descripción</strong>: Sube un video para su posterior procesamiento</p>
+<p><strong>Headers</strong>:</p>
+<pre><code>Content-Type: multipart/form-data
+X-Api-Key: sk_cd07c4b5... (opcional si REQUIRE_AUTH=false)
+</code></pre>
+<p><strong>Body (FormData)</strong>:</p>
+<pre><code class="language-javascript">{
+  video: File  // Archivo de video (mp4, webm, mov, avi)
+}
+</code></pre>
+<p><strong>Response Success (200)</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;uploadId&quot;: &quot;upl_1634567890123&quot;,
+  &quot;videoUrl&quot;: &quot;https://story.creatorsflow.app/outputs/uploads/upl_1634567890123.mp4&quot;,
+  &quot;filename&quot;: &quot;video.mp4&quot;,
+  &quot;size&quot;: 10485760
+}
+</code></pre>
+<p><strong>Response Error (400/500)</strong>:</p>
+<pre><code class="language-json">{
+  &quot;error&quot;: &quot;Invalid file type&quot;,
+  &quot;details&quot;: &quot;Only video files are allowed&quot;
+}
+</code></pre>
+<p><strong>Ejemplo con cURL</strong>:</p>
+<pre><code class="language-bash">curl -X POST https://story.creatorsflow.app/api/videos/upload \
+  -H &quot;X-Api-Key: sk_cd07c4b5...&quot; \
+  -F &quot;video=@/path/to/video.mp4&quot;
+</code></pre>
+<p><strong>Ejemplo con JavaScript</strong>:</p>
+<pre><code class="language-javascript">const formData = new FormData();
+formData.append(&#39;video&#39;, fileInput.files[0]);
+
+const response = await fetch(&#39;/api/videos/upload&#39;, {
+  method: &#39;POST&#39;,
+  body: formData
+});
+
+const { uploadId, videoUrl } = await response.json();
+</code></pre>
+<hr>
+<h4>2. Procesar Video</h4>
+<h5><code>POST /api/process-video</code></h5>
+<p><strong>Descripción</strong>: Inicia el procesamiento de un video para generar clips</p>
+<p><strong>Headers</strong>:</p>
+<pre><code>Content-Type: application/json
+X-Api-Key: sk_cd07c4b5...
+</code></pre>
+<p><strong>Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;uploadId&quot;: &quot;upl_1634567890123&quot;,
+  &quot;mode&quot;: &quot;auto&quot;,
+  &quot;clipDuration&quot;: 5,
+  &quot;maxClips&quot;: 50,
+  &quot;filters&quot;: {
+    &quot;type&quot;: &quot;vintage&quot;,
+    &quot;intensity&quot;: 0.7
+  },
+  &quot;effects&quot;: {
+    &quot;mirrorHorizontal&quot;: false,
+    &quot;mirrorVertical&quot;: false
+  },
+  &quot;overlays&quot;: {
+    &quot;style&quot;: &quot;pill-cta&quot;,
+    &quot;position&quot;: &quot;bottom&quot;,
+    &quot;opacity&quot;: 80
+  },
+  &quot;audio&quot;: {
+    &quot;enabled&quot;: true,
+    &quot;volume&quot;: 100
+  },
+  &quot;metadata&quot;: {
+    &quot;title&quot;: &quot;My Video&quot;,
+    &quot;description&quot;: &quot;Video description&quot;
+  }
+}
+</code></pre>
+<p><strong>Parámetros</strong>:</p>
+<ul>
+<li><code>uploadId</code> (string, required): ID del video subido</li>
+<li><code>mode</code> (string, required): &quot;auto&quot; o &quot;manual&quot;</li>
+<li><code>clipDuration</code> (number): Duración de cada clip en segundos (1-60)</li>
+<li><code>maxClips</code> (number): Cantidad máxima de clips (1-100)</li>
+<li><code>clips</code> (array, opcional): Para modo manual<pre><code class="language-json">[
+  { &quot;start&quot;: 0, &quot;end&quot;: 5 },
+  { &quot;start&quot;: 10, &quot;end&quot;: 15 }
+]
+</code></pre>
+</li>
+</ul>
+<p><strong>Response Success (200)</strong>:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;jobId&quot;: &quot;job_1634567890456&quot;,
+  &quot;status&quot;: &quot;pending&quot;,
+  &quot;message&quot;: &quot;Job created successfully&quot;
+}
+</code></pre>
+<p><strong>Ejemplo completo</strong>:</p>
+<pre><code class="language-javascript">const response = await fetch(&#39;/api/process-video&#39;, {
+  method: &#39;POST&#39;,
+  headers: {
+    &#39;Content-Type&#39;: &#39;application/json&#39;,
+    &#39;X-Api-Key&#39;: &#39;sk_cd07c4b5...&#39;
+  },
+  body: JSON.stringify({
+    uploadId: &#39;upl_1634567890123&#39;,
+    mode: &#39;auto&#39;,
+    clipDuration: 5,
+    maxClips: 50,
+    filters: { type: &#39;vintage&#39;, intensity: 0.7 }
+  })
+});
+
+const { jobId } = await response.json();
+</code></pre>
+<hr>
+<h4>3. Estado del Job</h4>
+<h5><code>GET /api/jobs/:jobId/status</code></h5>
+<p><strong>Descripción</strong>: Obtiene el estado actual de un job de procesamiento</p>
+<p><strong>Headers</strong>:</p>
+<pre><code>X-Api-Key: sk_cd07c4b5...
+</code></pre>
+<p><strong>Response Success (200)</strong>:</p>
+<pre><code class="language-json">{
+  &quot;jobId&quot;: &quot;job_1634567890456&quot;,
+  &quot;status&quot;: &quot;processing&quot;,
+  &quot;progress&quot;: 45,
+  &quot;message&quot;: &quot;Processing clip 5/10&quot;,
+  &quot;result&quot;: null
+}
+</code></pre>
+<p><strong>Estados posibles</strong>:</p>
+<ul>
+<li><code>pending</code>: Job creado, esperando procesamiento</li>
+<li><code>running</code> / <code>processing</code>: Procesando clips</li>
+<li><code>done</code> / <code>completed</code>: Completado exitosamente</li>
+<li><code>error</code> / <code>failed</code>: Error en procesamiento</li>
+</ul>
+<p><strong>Response cuando está completado</strong>:</p>
+<pre><code class="language-json">{
+  &quot;jobId&quot;: &quot;job_1634567890456&quot;,
+  &quot;status&quot;: &quot;done&quot;,
+  &quot;progress&quot;: 100,
+  &quot;message&quot;: &quot;Processing completed&quot;,
+  &quot;result&quot;: {
+    &quot;artifacts&quot;: [
+      {
+        &quot;id&quot;: &quot;clip_001&quot;,
+        &quot;url&quot;: &quot;https://story.creatorsflow.app/outputs/uploads/job_1634567890456/clip_001.mp4&quot;,
+        &quot;startTime&quot;: 0,
+        &quot;duration&quot;: 5,
+        &quot;size&quot;: 1048576
+      }
+    ],
+    &quot;metadata&quot;: {
+      &quot;totalClips&quot;: 10,
+      &quot;totalDuration&quot;: 50,
+      &quot;processingTime&quot;: 45
+    }
+  }
+}
+</code></pre>
+<p><strong>Polling recomendado</strong>:</p>
+<pre><code class="language-javascript">const checkStatus = async (jobId) =&gt; {
+  const response = await fetch(`/api/jobs/${jobId}/status`);
+  const job = await response.json();
+
+  if (job.status === &#39;done&#39;) {
+    console.log(&#39;Clips:&#39;, job.result.artifacts);
+  } else if (job.status === &#39;error&#39;) {
+    console.error(&#39;Error:&#39;, job.message);
+  } else {
+    console.log(`Progress: ${job.progress}%`);
+    setTimeout(() =&gt; checkStatus(jobId), 2000);
+  }
+};
+</code></pre>
+<hr>
+<h4>4. Descarga de Clips</h4>
+<h5><code>GET /api/downloadZip?jobId=:jobId</code></h5>
+<p><strong>Descripción</strong>: Descarga un ZIP con todos los clips generados</p>
+<p><strong>Headers</strong>:</p>
+<pre><code>X-Api-Key: sk_cd07c4b5...
+</code></pre>
+<p><strong>Response</strong>: Archivo ZIP (application/zip)</p>
+<p><strong>Ejemplo con JavaScript</strong>:</p>
+<pre><code class="language-javascript">const response = await fetch(`/api/downloadZip?jobId=${jobId}`, {
+  headers: { &#39;X-Api-Key&#39;: &#39;sk_cd07c4b5...&#39; }
+});
+
+const blob = await response.blob();
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement(&#39;a&#39;);
+a.href = url;
+a.download = `clips-${jobId}.zip`;
+a.click();
+</code></pre>
+<hr>
+<h4>5. Publicación a Redes Sociales (Metricool)</h4>
+<h5><code>POST /api/metricool/publish/stories</code></h5>
+<p><strong>Descripción</strong>: Publica un batch de clips a Facebook/Instagram Stories</p>
+<p><strong>Headers</strong>:</p>
+<pre><code>Content-Type: application/json
+X-Api-Key: sk_cd07c4b5...
+</code></pre>
+<p><strong>Body</strong>:</p>
+<pre><code class="language-json">{
+  &quot;posts&quot;: [
+    {
+      &quot;id&quot;: &quot;1&quot;,
+      &quot;url&quot;: &quot;https://story.creatorsflow.app/outputs/uploads/job_123/clip_001.mp4&quot;,
+      &quot;text&quot;: &quot;Check this out!&quot;
+    },
+    {
+      &quot;id&quot;: &quot;2&quot;,
+      &quot;url&quot;: &quot;https://story.creatorsflow.app/outputs/uploads/job_123/clip_002.mp4&quot;,
+      &quot;text&quot;: &quot;&quot;
+    }
+  ],
+  &quot;settings&quot;: {
+    &quot;accountId&quot;: &quot;123456&quot;,
+    &quot;publishSpeed&quot;: &quot;safe&quot;
+  },
+  &quot;schedule&quot;: {
+    &quot;mode&quot;: &quot;now&quot;
+  }
+}
+</code></pre>
+<p><strong>Parámetros</strong>:</p>
+<ul>
+<li><code>posts</code> (array): Lista de clips a publicar</li>
+<li><code>settings.accountId</code> (string): ID de la cuenta de Metricool</li>
+<li><code>settings.publishSpeed</code> (string): &quot;safe&quot; (120s), &quot;fast&quot; (90s), &quot;ultra&quot; (60s)</li>
+<li><code>schedule.mode</code> (string): &quot;now&quot; o &quot;scheduled&quot;</li>
+<li><code>schedule.scheduledAt</code> (string, opcional): ISO timestamp para modo scheduled</li>
+</ul>
+<p><strong>Response Success (200)</strong>:</p>
+<pre><code class="language-json">{
+  &quot;batchId&quot;: &quot;batch_1634567890789&quot;,
+  &quot;status&quot;: &quot;processing&quot;,
+  &quot;totalPosts&quot;: 10
+}
+</code></pre>
+<hr>
+<h5><code>GET /api/metricool/stream?batchId=:batchId</code></h5>
+<p><strong>Descripción</strong>: Server-Sent Events (SSE) para progreso en tiempo real</p>
+<p><strong>Headers</strong>:</p>
+<pre><code>Accept: text/event-stream
+X-Api-Key: sk_cd07c4b5...
+</code></pre>
+<p><strong>Response</strong>: Stream de eventos</p>
+<p><strong>Eventos emitidos</strong>:</p>
+<pre><code>event: progress
+data: {&quot;type&quot;:&quot;progress&quot;,&quot;published&quot;:1,&quot;total&quot;:10,&quot;currentStory&quot;:&quot;Story 1&quot;,&quot;status&quot;:&quot;published&quot;}
+
+event: progress
+data: {&quot;type&quot;:&quot;progress&quot;,&quot;published&quot;:2,&quot;total&quot;:10,&quot;currentStory&quot;:&quot;Story 2&quot;,&quot;status&quot;:&quot;uploading&quot;}
+
+event: completed
+data: {&quot;type&quot;:&quot;completed&quot;,&quot;published&quot;:10,&quot;total&quot;:10,&quot;errors&quot;:0}
+</code></pre>
+<p><strong>Ejemplo con JavaScript</strong>:</p>
+<pre><code class="language-javascript">const eventSource = new EventSource(
+  `/api/metricool/stream?batchId=${batchId}`
+);
+
+eventSource.onmessage = (event) =&gt; {
+  const data = JSON.parse(event.data);
+
+  if (data.type === &#39;progress&#39;) {
+    console.log(`Published: ${data.published}/${data.total}`);
+  } else if (data.type === &#39;completed&#39;) {
+    console.log(&#39;All clips published!&#39;);
+    eventSource.close();
+  }
+};
+</code></pre>
+<hr>
+<h5><code>GET /api/metricool/brands</code></h5>
+<p><strong>Descripción</strong>: Obtiene las cuentas disponibles de Metricool</p>
+<p><strong>Headers</strong>:</p>
+<pre><code>X-Api-Key: sk_cd07c4b5...
+</code></pre>
+<p><strong>Response Success (200)</strong>:</p>
+<pre><code class="language-json">{
+  &quot;brands&quot;: [
+    {
+      &quot;id&quot;: &quot;123456&quot;,
+      &quot;name&quot;: &quot;Mi Página de Facebook&quot;,
+      &quot;type&quot;: &quot;facebook&quot;,
+      &quot;avatar&quot;: &quot;https://...&quot;
+    }
+  ]
+}
+</code></pre>
+<hr>
+<h4>6. WebSocket Real-Time</h4>
+<h5><code>WS ws://story.creatorsflow.app/ws?jobId=:jobId</code></h5>
+<p><strong>Descripción</strong>: Conexión WebSocket para actualizaciones en tiempo real</p>
+<p><strong>Eventos del servidor → cliente</strong>:</p>
+<p><strong>Status Update</strong>:</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;status&quot;,
+  &quot;data&quot;: {
+    &quot;jobId&quot;: &quot;job_123&quot;,
+    &quot;status&quot;: &quot;processing&quot;,
+    &quot;progress&quot;: 45,
+    &quot;message&quot;: &quot;Processing clip 5/10&quot;
+  }
+}
+</code></pre>
+<p><strong>Completed</strong>:</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;completed&quot;,
+  &quot;data&quot;: {
+    &quot;jobId&quot;: &quot;job_123&quot;,
+    &quot;status&quot;: &quot;done&quot;,
+    &quot;progress&quot;: 100,
+    &quot;outputs&quot;: [...]
+  }
+}
+</code></pre>
+<p><strong>Error</strong>:</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;error&quot;,
+  &quot;data&quot;: {
+    &quot;message&quot;: &quot;FFmpeg processing failed&quot;,
+    &quot;code&quot;: &quot;FFMPEG_ERROR&quot;
+  }
+}
+</code></pre>
+<p><strong>Ejemplo con JavaScript</strong>:</p>
+<pre><code class="language-javascript">const ws = new WebSocket(`ws://story.creatorsflow.app/ws?jobId=${jobId}`);
+
+ws.onmessage = (event) =&gt; {
+  const { type, data } = JSON.parse(event.data);
+
+  if (type === &#39;status&#39;) {
+    updateProgress(data.progress);
+  } else if (type === &#39;completed&#39;) {
+    showResults(data.outputs);
+  } else if (type === &#39;error&#39;) {
+    showError(data.message);
+  }
+};
+
+ws.onerror = (error) =&gt; {
+  console.error(&#39;WebSocket error:&#39;, error);
+};
+
+ws.onclose = () =&gt; {
+  console.log(&#39;Connection closed&#39;);
+};
+</code></pre>
+<hr>
+<h3>SERVICIOS</h3>
+<h4>1. Processing Service</h4>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/services/processing.service.js</code></p>
+<p><strong>Funciones principales</strong>:</p>
+<pre><code class="language-javascript">// Procesar video desde archivo local
+async function processStoryFromFile(filePath, options, progressCallback) {
+  // 1. Validar archivo
+  // 2. Analizar con ffprobe
+  // 3. Generar clips con FFmpeg
+  // 4. Aplicar filtros/efectos
+  // 5. Guardar en outputs/
+  // 6. Retornar URLs públicas
+}
+
+// Obtener información del video
+async function getVideoInfo(videoUrl) {
+  // Usa ffprobe para extraer metadata
+  return {
+    duration: 120,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    codec: &#39;h264&#39;
+  };
+}
+</code></pre>
+<p><strong>Métricas de Prometheus</strong>:</p>
+<ul>
+<li><code>jobs_created_total</code>: Contador de jobs creados</li>
+<li><code>jobs_completed_total</code>: Contador de jobs completados</li>
+<li><code>jobs_failed_total</code>: Contador de jobs fallidos</li>
+<li><code>job_duration_seconds</code>: Histogram de duración de procesamiento</li>
+</ul>
+<hr>
+<h4>2. Queue Service</h4>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/services/queue.service.js</code></p>
+<p><strong>Bull Queues configurados</strong>:</p>
+<ul>
+<li><code>story-queue</code>: Procesamiento de stories</li>
+<li><code>reel-queue</code>: Procesamiento de reels</li>
+<li><code>image-queue</code>: Extracción de imágenes</li>
+</ul>
+<p><strong>Configuración</strong>:</p>
+<pre><code class="language-javascript">{
+  redis: {
+    host: &#39;localhost&#39;,
+    port: 6379
+  },
+  defaultJobOptions: {
+    removeOnComplete: 10,
+    removeOnFail: 5,
+    attempts: 3,
+    backoff: {
+      type: &#39;exponential&#39;,
+      delay: 2000
+    }
+  }
+}
+</code></pre>
+<p><strong>Uso</strong>:</p>
+<pre><code class="language-javascript">const queueService = require(&#39;./services/queue.service&#39;);
+
+// Agregar job
+await queueService.addStoryJob(jobId, videoUrl, options);
+
+// Obtener estado
+const status = await queueService.getJobStatus(jobId, &#39;story&#39;);
+
+// Estadísticas
+const stats = await queueService.getQueueStats();
+// { waiting: 5, active: 2, completed: 100, failed: 3 }
+</code></pre>
+<hr>
+<h4>3. Metricool Service</h4>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/services/metricool.service.js</code></p>
+<p><strong>API Base</strong>: <code>https://app.metricool.com/api</code></p>
+<p><strong>Funciones principales</strong>:</p>
+<pre><code class="language-javascript">// Obtener cuentas
+async function getAccounts(userId) {
+  // GET /admin/simpleProfiles?userId={userId}
+}
+
+// Normalizar URL de media (REQUERIDO)
+async function normalizeMedia(mediaUrl) {
+  // GET /actions/normalize/image/url?url={url}
+  // Retorna URL normalizada que acepta Metricool
+}
+
+// Crear story
+async function createStory({ accountId, mediaUrl, text, scheduledAt }) {
+  // POST /v2/scheduler/posts?userId={userId}&amp;blogId={accountId}
+  // Retorna postId
+}
+
+// Esperar confirmación de publicación
+async function waitForPublish(postId, maxWaitSeconds, onProgress) {
+  // Polling escalado: 1.5s → 2s → 3s → 5s → 8s
+  // Espera hasta status === &#39;PUBLISHED&#39;
+  // Retorna externalId (Facebook post ID)
+}
+
+// Publicar batch completo
+async function publishStoriesBatch({
+  accountId,
+  stories,
+  publishSpeed,
+  publishMode,
+  scheduledAt,
+  onProgress
+}) {
+  // Publica múltiples stories con delay entre cada una
+  // Emite progreso vía callback
+}
+</code></pre>
+<p><strong>Ejemplo de uso</strong>:</p>
+<pre><code class="language-javascript">const metricoolService = require(&#39;./services/metricool.service&#39;);
+
+// 1. Normalizar URL
+const normalizedUrl = await metricoolService.normalizeMedia(clipUrl);
+
+// 2. Crear story
+const postId = await metricoolService.createStory({
+  accountId: &#39;123456&#39;,
+  mediaUrl: normalizedUrl,
+  text: &#39;Check this out!&#39;,
+  scheduledAt: null  // null = publicar inmediatamente
+});
+
+// 3. Esperar confirmación
+const result = await metricoolService.waitForPublish(postId, 120, (progress) =&gt; {
+  console.log(`Waiting: ${progress.elapsed}s / ${progress.total}s`);
+});
+
+console.log(&#39;Published! Facebook ID:&#39;, result.externalId);
+</code></pre>
+<hr>
+<h3>BASE DE DATOS</h3>
+<p><strong>Motor</strong>: SQLite 3<br><strong>Ubicación</strong>: <code>/srv/storyclip/database/storyclip.db</code></p>
+<h4>Schema</h4>
+<h5>Tabla: <code>jobs</code></h5>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS jobs (
+  job_id TEXT PRIMARY KEY,
+  user_id TEXT,
+  path TEXT NOT NULL,              -- &#39;api&#39; | &#39;upload-direct&#39; | &#39;edge&#39;
+  source TEXT DEFAULT &#39;user&#39;,       -- &#39;user&#39; | &#39;cursor&#39; | &#39;test&#39;
+  idempotency_key TEXT UNIQUE,
+  flow_id TEXT,
+  status TEXT DEFAULT &#39;queued&#39;,     -- &#39;queued&#39; | &#39;running&#39; | &#39;done&#39; | &#39;error&#39;
+  progress INTEGER DEFAULT 0,       -- 0-100
+  input_json TEXT,                  -- JSON serializado
+  output_urls TEXT,                 -- JSON serializado
+  error_msg TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  started_at DATETIME,
+  finished_at DATETIME
+);
+</code></pre>
+<h5>Tabla: <code>publish_batches</code></h5>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS publish_batches (
+  batch_id TEXT PRIMARY KEY,
+  job_id TEXT,
+  user_id TEXT,
+  account_id TEXT NOT NULL,
+  publish_mode TEXT NOT NULL,       -- &#39;now&#39; | &#39;scheduled&#39; | &#39;bestTime&#39;
+  status TEXT NOT NULL DEFAULT &#39;processing&#39;,
+  total_clips INTEGER NOT NULL,
+  published_clips INTEGER DEFAULT 0,
+  failed_clips INTEGER DEFAULT 0,
+  current_clip_index INTEGER DEFAULT 0,
+  scheduled_for DATETIME,
+  error_msg TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  started_at DATETIME,
+  completed_at DATETIME,
+  FOREIGN KEY (job_id) REFERENCES jobs (job_id)
+);
+</code></pre>
+<h5>Tabla: <code>publish_batch_clips</code></h5>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS publish_batch_clips (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  batch_id TEXT NOT NULL,
+  clip_index INTEGER NOT NULL,
+  clip_url TEXT NOT NULL,
+  clip_title TEXT,
+  metricool_post_id TEXT,
+  facebook_post_id TEXT,
+  status TEXT NOT NULL DEFAULT &#39;pending&#39;,
+  error_msg TEXT,
+  attempts INTEGER DEFAULT 0,
+  scheduled_at DATETIME,
+  uploaded_at DATETIME,
+  published_at DATETIME,
+  FOREIGN KEY (batch_id) REFERENCES publish_batches (batch_id) ON DELETE CASCADE
+);
+</code></pre>
+<h4>Database Class</h4>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/database/db.js</code></p>
+<p><strong>Métodos</strong>:</p>
+<pre><code class="language-javascript">const db = require(&#39;./database/db&#39;);
+
+// Inicializar
+await db.init();
+
+// Query (SELECT)
+const jobs = await db.query(&#39;SELECT * FROM jobs WHERE user_id = ?&#39;, [userId]);
+
+// Get (un solo registro)
+const job = await db.get(&#39;SELECT * FROM jobs WHERE job_id = ?&#39;, [jobId]);
+
+// Run (INSERT/UPDATE/DELETE)
+await db.run(&#39;UPDATE jobs SET status = ? WHERE job_id = ?&#39;, [&#39;done&#39;, jobId]);
+
+// Transacción
+await db.transaction(async () =&gt; {
+  await db.run(&#39;INSERT INTO jobs ...&#39;);
+  await db.run(&#39;INSERT INTO publish_batches ...&#39;);
+});
+
+// Cerrar
+await db.close();
+</code></pre>
+<p><strong>Características</strong>:</p>
+<ul>
+<li>Modo WAL para mejor concurrencia</li>
+<li>Reconexión automática</li>
+<li>Reintentos en errores SQLITE_BUSY</li>
+<li>Transacciones ACID</li>
+</ul>
+<hr>
+<h3>SISTEMA DE COLAS</h3>
+<p><strong>Motor</strong>: Bull + Redis</p>
+<h4>Arquitectura de Colas</h4>
+<pre><code>Redis (localhost:6379)
+    │
+    ├── story-queue (concurrency: 3)
+    │   ├── Worker 1 → processStoryFromFile()
+    │   ├── Worker 2 → processStoryFromFile()
+    │   └── Worker 3 → processStoryFromFile()
+    │
+    ├── reel-queue (concurrency: 3)
+    │   └── Workers → processReel()
+    │
+    └── image-queue (concurrency: 3)
+        └── Workers → processImage()
+</code></pre>
+<h4>Job Options</h4>
+<pre><code class="language-javascript">{
+  jobId: &#39;custom-job-id&#39;,
+  removeOnComplete: 10,     // Mantener solo 10 completados
+  removeOnFail: 5,          // Mantener solo 5 fallidos
+  attempts: 3,              // Reintentar hasta 3 veces
+  backoff: {
+    type: &#39;exponential&#39;,
+    delay: 2000             // 2s, 4s, 8s...
+  }
+}
+</code></pre>
+<h4>Events</h4>
+<pre><code class="language-javascript">queue.on(&#39;completed&#39;, (job, result) =&gt; {
+  logger.info(`Job ${job.id} completed`);
+});
+
+queue.on(&#39;failed&#39;, (job, err) =&gt; {
+  logger.error(`Job ${job.id} failed:`, err);
+});
+
+queue.on(&#39;progress&#39;, (job, progress) =&gt; {
+  logger.info(`Job ${job.id} progress: ${progress}%`);
+});
+
+queue.on(&#39;active&#39;, (job) =&gt; {
+  logger.info(`Job ${job.id} started`);
+});
+
+queue.on(&#39;stalled&#39;, (job) =&gt; {
+  logger.warn(`Job ${job.id} stalled`);
+});
+</code></pre>
+<hr>
+<h3>WEBSOCKET</h3>
+<p><strong>Librería</strong>: ws v8.18.3<br><strong>Endpoint</strong>: <code>ws://story.creatorsflow.app/ws?jobId=:jobId</code></p>
+<h4>Conexión</h4>
+<pre><code class="language-javascript">const WebSocket = require(&#39;ws&#39;);
+
+const wss = new WebSocket.Server({ noServer: true });
+
+wss.on(&#39;connection&#39;, (ws, req) =&gt; {
+  const jobId = getJobIdFromRequest(req);
+
+  // Registrar conexión
+  connections.set(jobId, ws);
+
+  // Enviar estado inicial
+  ws.send(JSON.stringify({
+    type: &#39;status&#39;,
+    data: { jobId, status: &#39;connected&#39; }
+  }));
+});
+</code></pre>
+<h4>Eventos Emitidos</h4>
+<p><strong>Status Update</strong>:</p>
+<pre><code class="language-javascript">ws.send(JSON.stringify({
+  type: &#39;status&#39;,
+  data: {
+    jobId: &#39;job_123&#39;,
+    status: &#39;processing&#39;,
+    progress: 45,
+    message: &#39;Processing clip 5/10&#39;
+  }
+}));
+</code></pre>
+<p><strong>Completed</strong>:</p>
+<pre><code class="language-javascript">ws.send(JSON.stringify({
+  type: &#39;completed&#39;,
+  data: {
+    jobId: &#39;job_123&#39;,
+    status: &#39;done&#39;,
+    progress: 100,
+    outputs: [...]
+  }
+}));
+
+ws.close(1000, &#39;Job completed&#39;);
+</code></pre>
+<p><strong>Error</strong>:</p>
+<pre><code class="language-javascript">ws.send(JSON.stringify({
+  type: &#39;error&#39;,
+  data: {
+    message: &#39;FFmpeg processing failed&#39;,
+    code: &#39;FFMPEG_ERROR&#39;
+  }
+}));
+</code></pre>
+<h4>Integración con Job Monitoring</h4>
+<pre><code class="language-javascript">const jobMonitoringService = require(&#39;./services/job-monitoring.service&#39;);
+
+jobMonitoringService.on(&#39;jobUpdated&#39;, (jobData) =&gt; {
+  const ws = connections.get(jobData.jobId);
+  if (ws &amp;&amp; ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: &#39;status&#39;,
+      data: jobData
+    }));
+  }
+});
+
+jobMonitoringService.on(&#39;jobCompleted&#39;, (jobData) =&gt; {
+  const ws = connections.get(jobData.jobId);
+  if (ws &amp;&amp; ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: &#39;completed&#39;,
+      data: jobData
+    }));
+    ws.close(1000, &#39;Job completed&#39;);
+  }
+});
+</code></pre>
+<hr>
+<h2>🎨 FRONTEND - DOCUMENTACIÓN</h2>
+<h3>ESTRUCTURA DE PÁGINAS</h3>
+<p><strong>Framework</strong>: Next.js 15 con App Router</p>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/frontend/src/app/</code></p>
+<pre><code>src/app/
+├── layout.tsx          # Root layout (fuentes, metadata)
+├── page.tsx           # Página principal (SPA)
+├── globals.css        # Estilos globales
+└── favicon.ico        # Icono
+</code></pre>
+<h4>Página Principal</h4>
+<p><strong>Archivo</strong>: <code>page.tsx</code></p>
+<p><strong>Características</strong>:</p>
+<ul>
+<li>SPA (Single Page Application)</li>
+<li>Layout de dos columnas</li>
+<li>Sistema de notificaciones Toast</li>
+<li>Modal de sugerencias IA (Framer Motion)</li>
+<li>Polling automático de estado</li>
+<li>Sección de publicación a Facebook/Instagram</li>
+</ul>
+<p><strong>Secciones</strong>:</p>
+<ol>
+<li><strong>VideoConfigSection</strong>: Upload y configuración de video</li>
+<li><strong>DistributionConfigSection</strong>: Configuración de clips</li>
+<li><strong>FiltersAndEffectsSection</strong>: Filtros visuales y overlays</li>
+<li><strong>ExportConfigSection</strong>: Calidad y formato</li>
+<li><strong>BatchProcessingSection</strong>: Procesamiento múltiple</li>
+<li><strong>DistributionPreview</strong>: Preview de distribución</li>
+<li><strong>ResultsSection</strong>: Resultados y descarga</li>
+<li><strong>Publishing</strong>: Publicación a redes sociales</li>
+</ol>
+<hr>
+<h3>COMPONENTES</h3>
+<h4>1. VideoConfigSection</h4>
+<p><strong>Propósito</strong>: Configurar el video fuente (URL o archivo local)</p>
+<p><strong>Props</strong>:</p>
+<pre><code class="language-typescript">interface VideoConfigSectionProps {
+  onVideoConfigChange: (config: VideoConfig | null) =&gt; void;
+  onVideoDurationChange: (duration: number | null) =&gt; void;
+}
+</code></pre>
+<p><strong>Features</strong>:</p>
+<ul>
+<li>Toggle entre URL y File</li>
+<li>Upload con FormData</li>
+<li>Progress bar para uploads</li>
+<li>Preview con <code>&lt;video&gt;</code> element</li>
+<li>URLs de prueba rápidas</li>
+<li>Modal de sugerencias IA (automático)</li>
+</ul>
+<p><strong>Estado interno</strong>:</p>
+<pre><code class="language-typescript">const [inputMode, setInputMode] = useState&lt;&#39;url&#39; | &#39;file&#39;&gt;(&#39;url&#39;);
+const [videoUrl, setVideoUrl] = useState(&#39;&#39;);
+const [uploadProgress, setUploadProgress] = useState(0);
+const [uploadedVideoUrl, setUploadedVideoUrl] = useState(&#39;&#39;);
+const [currentVideoDuration, setCurrentVideoDuration] = useState&lt;number | null&gt;(null);
+</code></pre>
+<hr>
+<h4>2. DistributionConfigSection</h4>
+<p><strong>Propósito</strong>: Configurar la distribución de clips</p>
+<p><strong>Props</strong>:</p>
+<pre><code class="language-typescript">interface DistributionConfigSectionProps {
+  onDistributionChange: (distribution: ClipDistribution) =&gt; void;
+  videoDuration: number | null;
+}
+</code></pre>
+<p><strong>Presets de duración</strong>: 3s, 5s, 7s, 10s, 15s, 30s, 60s<br><strong>Presets de cantidad</strong>: 10, 20, 30, 50 clips</p>
+<p><strong>Modos de distribución</strong>:</p>
+<ul>
+<li><strong>Automático</strong>: Distribuye todo el video inteligentemente</li>
+<li><strong>Óptimo</strong>: Ajusta duración para maximizar cobertura</li>
+<li><strong>Fijo</strong>: Usa duración fija (puede cortar video)</li>
+</ul>
+<p><strong>Random Offset</strong>: Variación aleatoria de hasta 1s</p>
+<hr>
+<h4>3. FiltersAndEffectsSection</h4>
+<p><strong>Propósito</strong>: Aplicar filtros visuales y efectos</p>
+<p><strong>Tabs</strong>:</p>
+<ol>
+<li><strong>Filtros</strong>: 10 filtros disponibles (Radiant, Blur2, Fade, Twilight, Noir, etc.)</li>
+<li><strong>Flip</strong>: Volteo horizontal/vertical</li>
+<li><strong>Overlay</strong>: 5 overlays animados (none, pill-cta, impact-hook, subtitle, fade-label)</li>
+</ol>
+<p><strong>Configuración de overlay</strong>:</p>
+<ul>
+<li>Posición: top, center, bottom</li>
+<li>Opacidad: 10-100%</li>
+</ul>
+<hr>
+<h4>4. ExportConfigSection</h4>
+<p><strong>Propósito</strong>: Configurar calidad y formato de exportación</p>
+<p><strong>Presets disponibles</strong>:</p>
+<ul>
+<li><strong>stories-optimized</strong>: MP4, 1080p, 30fps, H.264</li>
+<li><strong>reels-optimized</strong>: MP4, 1080p, ultra quality</li>
+<li><strong>web-optimized</strong>: WebM, 720p, VP9</li>
+<li><strong>archive-quality</strong>: MP4, 4K, 60fps, H.265</li>
+</ul>
+<p><strong>Configuración manual</strong>:</p>
+<ul>
+<li>Formato: MP4, WebM, MOV</li>
+<li>Resolución: 720p, 1080p, 4K</li>
+<li>Calidad: low, medium, high, ultra</li>
+<li>FPS: 24, 30, 60</li>
+<li>Compresión: 10-100%</li>
+<li>Codec: H.264, H.265, VP9</li>
+</ul>
+<hr>
+<h4>5. ResultsSection</h4>
+<p><strong>Propósito</strong>: Mostrar resultados del procesamiento</p>
+<p><strong>Información mostrada</strong>:</p>
+<ul>
+<li>Estado del job (pending, processing, completed, failed)</li>
+<li>Progreso en %</li>
+<li>Job ID</li>
+<li>Barra de progreso animada</li>
+</ul>
+<p><strong>Clips generados</strong>:</p>
+<ul>
+<li>Lista completa con metadata</li>
+<li>Nombre de archivo</li>
+<li>Start time y duración</li>
+<li>Filtros aplicados</li>
+<li>Toggle para mostrar/ocultar metadata</li>
+</ul>
+<p><strong>Acciones</strong>:</p>
+<ul>
+<li>Descargar ZIP con todos los clips</li>
+<li>Reprocesar video</li>
+<li>Limpiar logs</li>
+</ul>
+<hr>
+<h4>6. AISuggestionsModal</h4>
+<p><strong>Propósito</strong>: Sugerencias inteligentes con animaciones</p>
+<p><strong>Tecnología</strong>: Framer Motion</p>
+<p><strong>Proceso</strong>:</p>
+<ol>
+<li>Análisis (2.5s con animación)</li>
+<li>Muestra 4 sugerencias</li>
+<li>Usuario selecciona</li>
+<li>Aplica configuración automáticamente</li>
+</ol>
+<p><strong>Categorías</strong>:</p>
+<ul>
+<li><strong>Trending</strong> 🔥: Viral Short-Form (95% confidence)</li>
+<li><strong>Creative</strong> 🎨: Estilo Cinematográfico (88%)</li>
+<li><strong>Engagement</strong> 💬: Máximo Engagement (92%)</li>
+<li><strong>Optimal</strong> ⚡: Rendimiento Óptimo (85%)</li>
+</ul>
+<p><strong>Animaciones</strong>:</p>
+<ul>
+<li>Fade in/out del modal</li>
+<li>Rotación del icono de análisis</li>
+<li>Pulse effect</li>
+<li>Barra de progreso animada</li>
+<li>Hover effects en tarjetas</li>
+</ul>
+<hr>
+<h4>7. Toast</h4>
+<p><strong>Propósito</strong>: Sistema de notificaciones</p>
+<p><strong>Tipos</strong>:</p>
+<ul>
+<li>success (verde)</li>
+<li>error (rojo)</li>
+<li>warning (amarillo)</li>
+<li>info (azul)</li>
+</ul>
+<p><strong>Features</strong>:</p>
+<ul>
+<li>Auto-close con timer (default 5s)</li>
+<li>Barra de progreso visual</li>
+<li>Animaciones suaves</li>
+<li>Stack múltiple</li>
+<li>Posición fija (top-right)</li>
+</ul>
+<p><strong>Hook useToast</strong>:</p>
+<pre><code class="language-typescript">const { toasts, showSuccess, showError, showInfo, showWarning } = useToast();
+
+showSuccess(&#39;Video procesado&#39;, &#39;Los clips están listos&#39;);
+showError(&#39;Error al procesar&#39;, &#39;Intenta de nuevo&#39;);
+</code></pre>
+<hr>
+<h3>HOOKS PERSONALIZADOS</h3>
+<h4>1. useVideoProcessor</h4>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/frontend/src/hooks/useVideoProcessor.ts</code></p>
+<p><strong>Propósito</strong>: Gestionar el ciclo de vida del procesamiento de video</p>
+<p><strong>Estado</strong>:</p>
+<pre><code class="language-typescript">{
+  currentJob: ProcessingJob | null
+  isProcessing: boolean
+  progress: number (0-100)
+  error: string | null
+}
+</code></pre>
+<p><strong>Acciones</strong>:</p>
+<pre><code class="language-typescript">const {
+  currentJob,
+  isProcessing,
+  progress,
+  error,
+  startProcessing,
+  checkStatus,
+  downloadZip,
+  clearError,
+  reset,
+  startPolling,
+  stopPolling
+} = useVideoProcessor();
+</code></pre>
+<p><strong>Polling automático</strong>:</p>
+<pre><code class="language-typescript">// Inicia polling cada 2 segundos
+startPolling(jobId, 2000);
+
+// Se detiene automáticamente cuando completa o falla
+</code></pre>
+<p><strong>Uso completo</strong>:</p>
+<pre><code class="language-typescript">// 1. Iniciar procesamiento
+await startProcessing({
+  uploadId: &#39;upl_123&#39;,
+  distribution: { ... },
+  filters: [ ... ]
+});
+
+// 2. El hook inicia polling automático
+
+// 3. Estado se actualiza automáticamente
+console.log(progress); // 45%
+
+// 4. Cuando completa
+if (currentJob?.status === &#39;completed&#39;) {
+  console.log(&#39;Clips:&#39;, currentJob.result.artifacts);
+}
+</code></pre>
+<hr>
+<h4>2. useDistributionPreview</h4>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/frontend/src/hooks/useDistributionPreview.ts</code></p>
+<p><strong>Propósito</strong>: Generar preview en tiempo real de la distribución</p>
+<p><strong>Return</strong>:</p>
+<pre><code class="language-typescript">{
+  preview: {
+    totalClips: number
+    totalDuration: number
+    coverage: number (%)
+    clips: Array&lt;{ start, end, duration }&gt;
+  },
+  validation: {
+    valid: boolean
+    errors: string[]
+  },
+  isLoading: boolean
+}
+</code></pre>
+<p><strong>Uso</strong>:</p>
+<pre><code class="language-typescript">const { preview, validation, isLoading } = useDistributionPreview(
+  videoConfig,
+  distribution
+);
+
+if (validation.valid) {
+  console.log(`Se generarán ${preview.totalClips} clips`);
+  console.log(`Cobertura: ${preview.coverage}%`);
+} else {
+  console.error(&#39;Errores:&#39;, validation.errors);
+}
+</code></pre>
+<p><strong>Optimización</strong>:</p>
+<ul>
+<li><code>useMemo</code> para evitar recálculos innecesarios</li>
+<li>Solo recalcula cuando cambian dependencias</li>
+<li>Simulación de loading de 300ms para UX</li>
+</ul>
+<hr>
+<h3>API CLIENT</h3>
+<p><strong>Ubicación</strong>: <code>/srv/storyclip/frontend/src/lib/api/client.ts</code></p>
+<p><strong>Configuración base</strong>:</p>
+<pre><code class="language-typescript">const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || &#39;http://localhost:3001/api&#39;;
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: { &#39;Content-Type&#39;: &#39;application/json&#39; }
+});
+</code></pre>
+<h4>Funciones principales</h4>
+<h5>uploadVideo(file: File)</h5>
+<pre><code class="language-typescript">export async function uploadVideo(file: File) {
+  const formData = new FormData();
+  formData.append(&#39;video&#39;, file);
+
+  const response = await apiClient.post(&#39;/videos/upload&#39;, formData, {
+    headers: { &#39;Content-Type&#39;: &#39;multipart/form-data&#39; }
+  });
+
+  return {
+    success: true,
+    uploadId: response.data.uploadId,
+    videoUrl: response.data.videoUrl,
+    filename: response.data.filename,
+    size: response.data.size
+  };
+}
+</code></pre>
+<h5>processVideo(request: ProcessVideoRequest)</h5>
+<pre><code class="language-typescript">export async function processVideo(request: ProcessVideoRequest) {
+  // Convierte la configuración del frontend al formato del backend
+  const payload = {
+    uploadId: request.uploadId,
+    mode: request.distribution.mode === &#39;automatic&#39; ? &#39;auto&#39; : &#39;manual&#39;,
+    clipDuration: request.distribution.clipDuration,
+    maxClips: request.distribution.maxClips,
+    filters: request.filters,
+    effects: {
+      mirrorHorizontal: request.flip?.horizontal || false,
+      mirrorVertical: request.flip?.vertical || false
+    },
+    overlays: request.overlay,
+    // ... más configuración
+  };
+
+  const response = await apiClient.post(&#39;/process-video&#39;, payload);
+  return response.data;
+}
+</code></pre>
+<h5>getJobStatus(jobId: string)</h5>
+<pre><code class="language-typescript">export async function getJobStatus(jobId: string): Promise&lt;ProcessingJob&gt; {
+  const response = await apiClient.get(`/jobs/${jobId}/status`);
+
+  // Mapea estados del backend al frontend
+  const status = response.data.status === &#39;done&#39; ? &#39;completed&#39; :
+                 response.data.status === &#39;error&#39; ? &#39;failed&#39; :
+                 response.data.status;
+
+  return {
+    id: jobId,
+    status,
+    progress: response.data.progress,
+    clips: response.data.result?.artifacts || [],
+    error: response.data.errorMessage
+  };
+}
+</code></pre>
+<h5>downloadClipsZip(jobId: string)</h5>
+<pre><code class="language-typescript">export async function downloadClipsZip(jobId: string) {
+  const response = await apiClient.get(`/downloadZip?jobId=${jobId}`, {
+    responseType: &#39;blob&#39;
+  });
+
+  const blob = new Blob([response.data], { type: &#39;application/zip&#39; });
+  const downloadUrl = window.URL.createObjectURL(blob);
+
+  // Crear enlace temporal y descargar
+  const link = document.createElement(&#39;a&#39;);
+  link.href = downloadUrl;
+  link.download = `clips-${jobId}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Limpiar URL
+  window.URL.revokeObjectURL(downloadUrl);
+
+  return { success: true, downloadUrl };
+}
+</code></pre>
+<hr>
+<h2>🔄 FLUJOS DE DATOS COMPLETOS</h2>
+<h3>Flujo 1: Upload → Process → Download</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+└─────────────────────────────────────────────────────────────────┘
+   │
+   │ 1. Usuario selecciona archivo
+   │
+   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ VideoConfigSection                                               │
+│ - handleFileUpload()                                             │
+│ - FormData.append(&#39;video&#39;, file)                                │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ POST /api/videos/upload
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (Express)                                                │
+│ - Multer middleware                                              │
+│ - Guarda en /srv/storyclip/outputs/uploads/                    │
+│ - uploadsRepo.set(uploadId, { path, size })                     │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ Response: { uploadId, videoUrl }
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│ - Recibe uploadId                                                │
+│ - Detecta duración con &lt;video&gt; element                          │
+│ - Muestra AISuggestionsModal (automático)                       │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ 2. Usuario configura distribución, filtros, etc.
+                     │ 3. Usuario hace clic &quot;Procesar Video&quot;
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ useVideoProcessor                                                │
+│ - startProcessing(request)                                       │
+│ - Construye payload con toda la configuración                   │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ POST /api/process-video
+                     │ { uploadId, mode, clipDuration, maxClips, filters, ... }
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (Express)                                                │
+│ /api/process-video (robust-routes.js)                          │
+│                                                                   │
+│ 1. robust-processing.startProcess()                             │
+│    - Crea jobId único                                            │
+│    - Copia video a /srv/storyclip/work/jobId/                  │
+│    - Inserta en DB: jobs (status: running, progress: 10%)       │
+│                                                                   │
+│ 2. Responde inmediatamente: { jobId, status: &#39;pending&#39; }        │
+│                                                                   │
+│ 3. setImmediate() → runPipeline() asíncrono                     │
+│    a. updateJobProgress(jobId, 30, &#39;Analyzing video...&#39;)        │
+│    b. ffmpegHelper.createStoryClips()                           │
+│       - Lee video con ffprobe                                    │
+│       - Genera clips según configuración                         │
+│       - Aplica filtros/efectos/overlays                          │
+│       - Output: /srv/storyclip/work/jobId/clip_001.mp4, ...    │
+│    c. updateJobProgress(jobId, 90, &#39;Exporting clips...&#39;)        │
+│    d. Mueve clips a /srv/storyclip/outputs/uploads/jobId/       │
+│    e. Genera artifacts con URLs públicas                         │
+│    f. Actualiza DB (status: done, progress: 100%)               │
+│    g. jobMonitoringService.emit(&#39;jobCompleted&#39;, {...})          │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ Mientras tanto...
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│ useVideoProcessor                                                │
+│ - startPolling(jobId, 2000)                                      │
+│                                                                   │
+│ Loop cada 2 segundos:                                            │
+│   GET /api/jobs/:jobId/status                                   │
+│   - Recibe: { status, progress, message }                       │
+│   - Actualiza estado: setProgress(progress)                     │
+│   - ResultsSection muestra barra de progreso                    │
+│                                                                   │
+│ Cuando status === &#39;done&#39;:                                        │
+│   - stopPolling()                                                │
+│   - Muestra Toast: &quot;Video procesado exitosamente&quot;              │
+│   - ResultsSection muestra lista de clips                       │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ 4. Usuario hace clic &quot;Descargar Carpeta de Clips&quot;
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ useVideoProcessor                                                │
+│ - downloadZip(jobId)                                             │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ GET /api/downloadZip?jobId=...
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (Express)                                                │
+│ - Crea ZIP con todos los clips                                  │
+│ - Response: Blob (application/zip)                              │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ Blob data
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│ - Crea Blob URL: window.URL.createObjectURL(blob)              │
+│ - Crea &lt;a&gt; temporal con download=&quot;clips.zip&quot;                   │
+│ - Simula click → Descarga inicia                               │
+│ - Limpia Blob URL                                                │
+│ - Toast: &quot;Descarga iniciada&quot;                                    │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h3>Flujo 2: Publicación a Metricool</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│ - Clips ya procesados                                            │
+│ - Usuario hace clic &quot;Publicar automáticamente&quot;                  │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ POST /api/metricool/publish/stories
+                     │ {
+                     │   posts: [{ id, url, text }, ...],
+                     │   settings: { accountId, publishSpeed: &#39;safe&#39; },
+                     │   schedule: { mode: &#39;now&#39; }
+                     │ }
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (Express)                                                │
+│ /api/metricool/publish/stories (metricool.js)                  │
+│                                                                   │
+│ 1. Genera batchId único                                          │
+│ 2. Inserta en DB: publish_batches (status: processing)          │
+│ 3. Inserta en DB: publish_batch_clips (status: pending)         │
+│ 4. Responde inmediatamente: { batchId, status: &#39;processing&#39; }   │
+│                                                                   │
+│ 5. setImmediate() → publishBatch() asíncrono                    │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ Mientras tanto...
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│ - EventSource(&#39;/api/metricool/stream?batchId=...&#39;)             │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ SSE connection
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (Express)                                                │
+│ /api/metricool/stream (metricool.js)                           │
+│                                                                   │
+│ Bucle para cada clip:                                            │
+│   1. normalizeMedia(clipUrl)                                     │
+│      → Metricool valida y procesa el video                      │
+│      → Retorna normalizedUrl                                     │
+│                                                                   │
+│   2. createStory({ mediaUrl: normalizedUrl, ... })              │
+│      → POST a Metricool API                                      │
+│      → Retorna postId                                            │
+│                                                                   │
+│   3. waitForPublish(postId)                                      │
+│      → Polling escalado: 1.5s → 2s → 3s → 5s → 8s              │
+│      → Espera hasta status === &#39;PUBLISHED&#39;                      │
+│      → Retorna externalId (Facebook post ID)                    │
+│                                                                   │
+│   4. Emite evento SSE:                                           │
+│      data: {                                                     │
+│        &quot;type&quot;: &quot;progress&quot;,                                       │
+│        &quot;published&quot;: 1,                                           │
+│        &quot;total&quot;: 10,                                              │
+│        &quot;currentStory&quot;: &quot;Story 1&quot;,                               │
+│        &quot;status&quot;: &quot;published&quot;                                     │
+│      }                                                           │
+│                                                                   │
+│   5. Actualiza DB: publish_batch_clips (status: published)      │
+│                                                                   │
+│   6. Delay 5 segundos antes del siguiente                        │
+│                                                                   │
+│ Cuando termina todos:                                            │
+│   - Emite evento: data: { &quot;type&quot;: &quot;completed&quot;, ... }            │
+│   - Actualiza DB: publish_batches (status: completed)           │
+│   - Cierra SSE connection                                        │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ SSE events
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│ EventSource.onmessage = (event) =&gt; {                            │
+│   const data = JSON.parse(event.data);                          │
+│                                                                   │
+│   if (data.type === &#39;progress&#39;) {                               │
+│     updateProgress(data.published / data.total * 100);          │
+│     showToast(`Publicado: ${data.published}/${data.total}`);   │
+│   }                                                              │
+│                                                                   │
+│   if (data.type === &#39;completed&#39;) {                              │
+│     showSuccess(&#39;Todos los clips publicados!&#39;);                 │
+│     eventSource.close();                                         │
+│   }                                                              │
+│ }                                                                │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h3>Flujo 3: WebSocket Real-Time Updates</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│ - Usuario inicia procesamiento                                   │
+│ - Recibe jobId                                                   │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ WebSocket connection
+                     │ ws://story.creatorsflow.app/ws?jobId=...
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (WebSocket Server)                                       │
+│ - Acepta conexión                                                │
+│ - Registra en Map: connections.set(jobId, ws)                   │
+│ - Envía estado inicial:                                          │
+│   { type: &#39;status&#39;, data: { jobId, status: &#39;connected&#39; } }      │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ Backend procesa video...
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (Processing)                                             │
+│ runPipeline() ejecuta:                                           │
+│                                                                   │
+│ 1. updateJobProgress(jobId, 30, &#39;Analyzing video...&#39;)           │
+│    ↓                                                             │
+│    jobManager.updateProgress(jobId, 30, ...)                    │
+│    ↓                                                             │
+│    jobMonitoringService.emit(&#39;jobUpdated&#39;, {                    │
+│      jobId, status: &#39;processing&#39;, progress: 30, message: &#39;...&#39;  │
+│    })                                                            │
+│                                                                   │
+│ 2. ffmpegHelper.createStoryClips()                              │
+│    - Procesa clips (emite progreso cada 10%)                    │
+│    ↓                                                             │
+│    updateJobProgress(jobId, 50, &#39;Processing clip 5/10&#39;)         │
+│    ↓                                                             │
+│    jobMonitoringService.emit(&#39;jobUpdated&#39;, { ... })             │
+│                                                                   │
+│ 3. Completa                                                      │
+│    ↓                                                             │
+│    jobMonitoringService.emit(&#39;jobCompleted&#39;, {                  │
+│      jobId, status: &#39;done&#39;, progress: 100, outputs: [...]       │
+│    })                                                            │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ Events
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ BACKEND (WebSocket Server)                                       │
+│                                                                   │
+│ jobMonitoringService.on(&#39;jobUpdated&#39;, (jobData) =&gt; {            │
+│   const ws = connections.get(jobData.jobId);                    │
+│   if (ws &amp;&amp; ws.readyState === WebSocket.OPEN) {                 │
+│     ws.send(JSON.stringify({                                     │
+│       type: &#39;status&#39;,                                            │
+│       data: jobData                                              │
+│     }));                                                         │
+│   }                                                              │
+│ });                                                              │
+│                                                                   │
+│ jobMonitoringService.on(&#39;jobCompleted&#39;, (jobData) =&gt; {          │
+│   const ws = connections.get(jobData.jobId);                    │
+│   if (ws &amp;&amp; ws.readyState === WebSocket.OPEN) {                 │
+│     ws.send(JSON.stringify({                                     │
+│       type: &#39;completed&#39;,                                         │
+│       data: jobData                                              │
+│     }));                                                         │
+│     ws.close(1000, &#39;Job completed&#39;);                            │
+│   }                                                              │
+│ });                                                              │
+└────────────────────┬────────────────────────────────────────────┘
+                     │
+                     │ WebSocket messages
+                     │
+┌────────────────────▼────────────────────────────────────────────┐
+│ CLIENTE (Frontend)                                               │
+│                                                                   │
+│ ws.onmessage = (event) =&gt; {                                      │
+│   const { type, data } = JSON.parse(event.data);                │
+│                                                                   │
+│   if (type === &#39;status&#39;) {                                       │
+│     setProgress(data.progress);                                  │
+│     setMessage(data.message);                                    │
+│     // Actualiza UI en tiempo real                              │
+│   }                                                              │
+│                                                                   │
+│   if (type === &#39;completed&#39;) {                                    │
+│     setClips(data.outputs);                                      │
+│     showSuccess(&#39;Video procesado exitosamente!&#39;);               │
+│   }                                                              │
+│                                                                   │
+│   if (type === &#39;error&#39;) {                                        │
+│     showError(data.message);                                     │
+│   }                                                              │
+│ };                                                               │
+│                                                                   │
+│ ws.onclose = () =&gt; {                                             │
+│   console.log(&#39;WebSocket closed&#39;);                              │
+│ };                                                               │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2>💻 GUÍA DE DESARROLLO</h2>
+<h3>Setup del Proyecto</h3>
+<h4>Prerrequisitos</h4>
+<pre><code class="language-bash"># Sistema operativo
+Ubuntu 20.04+ / Debian 11+
+
+# Software
+- Node.js 20+
+- npm 9+
+- Redis 7+
+- FFmpeg 7+
+- PM2 (opcional, para producción)
+</code></pre>
+<h4>Instalación</h4>
+<p><strong>1. Clonar repositorio</strong>:</p>
+<pre><code class="language-bash">cd /srv/storyclip
+</code></pre>
+<p><strong>2. Backend</strong>:</p>
+<pre><code class="language-bash">cd /srv/storyclip
+
+# Instalar dependencias
+npm install
+
+# Configurar entorno
+cp .env.example .env
+nano .env
+
+# Crear base de datos
+node -e &quot;require(&#39;./database/db&#39;).init()&quot;
+
+# Iniciar en desarrollo
+npm run dev
+
+# O con PM2 (producción)
+pm2 start ecosystem.config.js
+</code></pre>
+<p><strong>3. Frontend</strong>:</p>
+<pre><code class="language-bash">cd /srv/storyclip/frontend
+
+# Instalar dependencias
+npm install
+
+# Configurar entorno
+cp .env.example .env.local
+nano .env.local
+
+# Iniciar en desarrollo
+npm run dev
+
+# Build para producción
+npm run build
+
+# Servir build
+npm start
+</code></pre>
+<p><strong>4. Redis</strong>:</p>
+<pre><code class="language-bash"># Instalar Redis
+sudo apt install redis-server
+
+# Iniciar Redis
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+
+# Verificar
+redis-cli ping
+# Debe responder: PONG
+</code></pre>
+<p><strong>5. FFmpeg</strong>:</p>
+<pre><code class="language-bash"># Instalar FFmpeg estático
+wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+tar -xf ffmpeg-release-amd64-static.tar.xz
+sudo cp ffmpeg-7.0.2-amd64-static/ffmpeg /usr/local/bin/
+sudo cp ffmpeg-7.0.2-amd64-static/ffprobe /usr/local/bin/
+
+# Verificar
+ffmpeg -version
+</code></pre>
+<hr>
+<h3>Variables de Entorno</h3>
+<h4>Backend (.env)</h4>
+<pre><code class="language-bash"># Configuración del servidor
+NODE_ENV=development
+PORT=3000
+HOST=0.0.0.0
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# Directorios
+UPLOAD_TMP_DIR=/srv/storyclip/tmp/uploads
+PROCESS_WORK_DIR=/srv/storyclip/work
+OUTPUT_ROOT=/srv/storyclip/outputs
+OUTPUT_DIR=/srv/storyclip/outputs
+CDN_BASE=https://story.creatorsflow.app/outputs
+TEMP_DIR=/srv/storyclip/tmp
+
+# FFmpeg
+FFMPEG_THREADS=8
+MAX_CONCURRENT_JOBS=10
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:3001,https://story.creatorsflow.app
+
+# Auth
+JWT_SECRET=your-jwt-secret-here
+API_KEY=sk_prod_your_key_here
+STORYCLIP_API_KEY=sk_prod_your_key_here
+
+# Base de datos
+DATABASE_PATH=/srv/storyclip/database/storyclip.db
+
+# Metricool
+METRICOOL_USER_TOKEN=your_metricool_token_here
+
+# Sistema Unificado
+ALLOW_UPLOAD_DIRECT_TEST=true
+REQUIRE_AUTH=false
+REALTIME_ENABLED=true
+</code></pre>
+<h4>Frontend (.env.local)</h4>
+<pre><code class="language-bash"># StoryClip API
+NEXT_PUBLIC_API_URL=https://story.creatorsflow.app/api
+NEXT_PUBLIC_CDN_URL=https://story.creatorsflow.app/outputs
+NEXT_PUBLIC_API_KEY=sk_prod_your_key_here
+NEXT_PUBLIC_POLL_INTERVAL=2500
+NEXT_PUBLIC_TIMEOUT=900000
+
+# Supabase (opcional, actualmente desactivado)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+NEXT_PUBLIC_USE_SUPABASE=false
+</code></pre>
+<hr>
+<h3>Estructura de Carpetas</h3>
+<pre><code>/srv/storyclip/
+├── app.js                    # Punto de entrada del backend
+├── ecosystem.config.js       # Configuración PM2
+├── package.json              # Dependencias backend
+├── .env                      # Variables de entorno
+│
+├── routes/                   # Rutas de la API
+│   ├── api.js               # Rutas principales
+│   ├── robust-routes.js     # Rutas optimizadas
+│   ├── metricool.js         # Integración Metricool
+│   ├── websocket.js         # WebSocket
+│   └── ...
+│
+├── services/                 # Lógica de negocio
+│   ├── processing.service.js
+│   ├── queue.service.js
+│   ├── metricool.service.js
+│   ├── download.service.js
+│   └── ...
+│
+├── middleware/               # Middleware Express
+│   ├── auth.js
+│   ├── cors.js
+│   ├── error.js
+│   └── security.js
+│
+├── database/                 # Base de datos
+│   ├── db.js                # Database class
+│   ├── schema.sql           # Schema SQL
+│   └── storyclip.db         # SQLite database
+│
+├── utils/                    # Utilidades
+│   ├── logger.js
+│   ├── cleanup.js
+│   └── ...
+│
+├── frontend/                 # Frontend Next.js
+│   ├── src/
+│   │   ├── app/             # Next.js App Router
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── globals.css
+│   │   ├── components/      # Componentes React
+│   │   ├── hooks/           # Custom hooks
+│   │   ├── lib/             # Librerías
+│   │   │   └── api/         # API client
+│   │   ├── types/           # TypeScript types
+│   │   └── utils/           # Utilidades frontend
+│   ├── public/              # Archivos estáticos
+│   ├── package.json
+│   ├── next.config.js
+│   ├── tailwind.config.ts
+│   └── tsconfig.json
+│
+├── uploads/                  # Videos originales
+├── work/                     # Procesamiento temporal
+├── outputs/                  # Clips finales
+│   └── uploads/             # Organizados por jobId
+└── tmp/                      # Archivos temporales
+</code></pre>
+<hr>
+<h3>Testing</h3>
+<h4>Backend</h4>
+<p><strong>Testing manual con cURL</strong>:</p>
+<pre><code class="language-bash"># 1. Health check
+curl http://localhost:3000/api/health
+
+# 2. Upload video
+curl -X POST http://localhost:3000/api/videos/upload \
+  -F &quot;video=@test.mp4&quot;
+
+# 3. Process video
+curl -X POST http://localhost:3000/api/process-video \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#39;{
+    &quot;uploadId&quot;: &quot;upl_123&quot;,
+    &quot;mode&quot;: &quot;auto&quot;,
+    &quot;clipDuration&quot;: 5,
+    &quot;maxClips&quot;: 10
+  }&#39;
+
+# 4. Check status
+curl http://localhost:3000/api/jobs/job_123/status
+</code></pre>
+<p><strong>Testing con scripts incluidos</strong>:</p>
+<pre><code class="language-bash"># Test completo
+node test-complete-flow.js
+
+# Test de upload
+node test-upload.js
+
+# Test de procesamiento
+node test-processing.js
+
+# Test de Metricool
+node test-metricool-integration.js
+</code></pre>
+<h4>Frontend</h4>
+<p><strong>Testing manual</strong>:</p>
+<ol>
+<li>Abrir <code>http://localhost:3001/tester/</code></li>
+<li>Subir un video de prueba</li>
+<li>Configurar distribución</li>
+<li>Procesar y verificar resultados</li>
+</ol>
+<p><strong>URLs de prueba incluidas</strong>:</p>
+<ul>
+<li>Big Buck Bunny (9 min, 720p)</li>
+<li>Sintel (52s, 720p)</li>
+<li>Test Video (10s, 1MB)</li>
+</ul>
+<hr>
+<h3>Debugging</h3>
+<h4>Backend</h4>
+<p><strong>Logs con Winston</strong>:</p>
+<pre><code class="language-javascript">const logger = require(&#39;./utils/logger&#39;);
+
+logger.info(&#39;Job started&#39;, { jobId });
+logger.error(&#39;Processing failed&#39;, { error });
+logger.debug(&#39;FFmpeg command&#39;, { command });
+</code></pre>
+<p><strong>Logs de PM2</strong>:</p>
+<pre><code class="language-bash"># Ver logs en tiempo real
+pm2 logs storyclip
+
+# Ver solo errores
+pm2 logs storyclip --err
+
+# Ver últimas 100 líneas
+pm2 logs storyclip --lines 100
+</code></pre>
+<p><strong>Redis CLI</strong>:</p>
+<pre><code class="language-bash">redis-cli
+
+# Ver todas las keys
+KEYS *
+
+# Ver contenido de una queue
+LRANGE bull:story-queue:wait 0 -1
+
+# Ver jobs activos
+SMEMBERS bull:story-queue:active
+</code></pre>
+<p><strong>SQLite CLI</strong>:</p>
+<pre><code class="language-bash">sqlite3 /srv/storyclip/database/storyclip.db
+
+# Ver todos los jobs
+SELECT * FROM jobs ORDER BY created_at DESC LIMIT 10;
+
+# Ver jobs en progreso
+SELECT * FROM jobs WHERE status = &#39;running&#39;;
+
+# Ver batches de publicación
+SELECT * FROM publish_batches WHERE status = &#39;processing&#39;;
+</code></pre>
+<h4>Frontend</h4>
+<p><strong>React DevTools</strong>:</p>
+<ul>
+<li>Instalar extensión de navegador</li>
+<li>Inspeccionar componentes</li>
+<li>Ver estado y props</li>
+</ul>
+<p><strong>Network Tab</strong>:</p>
+<ul>
+<li>Ver requests a API</li>
+<li>Verificar payloads</li>
+<li>Revisar respuestas</li>
+</ul>
+<p><strong>Console logs</strong>:</p>
+<pre><code class="language-javascript">console.log(&#39;State:&#39;, state);
+console.log(&#39;API response:&#39;, response);
+</code></pre>
+<hr>
+<h2>🚀 DESPLIEGUE Y CONFIGURACIÓN</h2>
+<h3>Producción con PM2</h3>
+<p><strong>1. Instalar PM2</strong>:</p>
+<pre><code class="language-bash">npm install -g pm2
+</code></pre>
+<p><strong>2. Configurar ecosystem.config.js</strong>:</p>
+<pre><code class="language-javascript">module.exports = {
+  apps: [{
+    name: &#39;storyclip&#39;,
+    script: &#39;app.js&#39;,
+    cwd: &#39;/srv/storyclip&#39;,
+    instances: 1,
+    exec_mode: &#39;fork&#39;,
+    env: {
+      NODE_ENV: &#39;production&#39;,
+      PORT: 3000,
+      HOST: &#39;0.0.0.0&#39;
+    },
+    error_file: &#39;/var/log/pm2/storyclip-error.log&#39;,
+    out_file: &#39;/var/log/pm2/storyclip-out.log&#39;,
+    max_memory_restart: &#39;1G&#39;,
+    restart_delay: 4000
+  }]
+};
+</code></pre>
+<p><strong>3. Iniciar</strong>:</p>
+<pre><code class="language-bash">cd /srv/storyclip
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+</code></pre>
+<p><strong>4. Gestión</strong>:</p>
+<pre><code class="language-bash"># Ver estado
+pm2 list
+
+# Reiniciar
+pm2 restart storyclip
+
+# Detener
+pm2 stop storyclip
+
+# Ver logs
+pm2 logs storyclip
+
+# Monitoreo
+pm2 monit
+</code></pre>
+<hr>
+<h3>Nginx como Proxy Inverso</h3>
+<p><strong>Configuración</strong>: <code>/etc/nginx/sites-available/storyclip</code></p>
+<pre><code class="language-nginx">server {
+    listen 80;
+    server_name story.creatorsflow.app;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name story.creatorsflow.app;
+
+    # SSL certificates (Let&#39;s Encrypt)
+    ssl_certificate /etc/letsencrypt/live/story.creatorsflow.app/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/story.creatorsflow.app/privkey.pem;
+
+    # API (backend)
+    location /api/ {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection &#39;upgrade&#39;;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+
+        # Timeouts para procesamiento largo
+        proxy_connect_timeout 600s;
+        proxy_send_timeout 600s;
+        proxy_read_timeout 600s;
+    }
+
+    # WebSocket
+    location /ws {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection &quot;upgrade&quot;;
+        proxy_set_header Host $host;
+    }
+
+    # Outputs (clips generados)
+    location /outputs/ {
+        alias /srv/storyclip/outputs/;
+        autoindex off;
+        add_header Access-Control-Allow-Origin *;
+        add_header Cache-Control &quot;public, max-age=31536000&quot;;
+    }
+
+    # Frontend (Next.js)
+    location /tester/ {
+        alias /srv/storyclip/frontend/out/;
+        try_files $uri $uri/ /tester/index.html;
+    }
+
+    # Max upload size
+    client_max_body_size 10G;
+}
+</code></pre>
+<p><strong>Activar configuración</strong>:</p>
+<pre><code class="language-bash">sudo ln -s /etc/nginx/sites-available/storyclip /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+</code></pre>
+<hr>
+<h3>SSL con Let&#39;s Encrypt</h3>
+<pre><code class="language-bash"># Instalar Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Obtener certificado
+sudo certbot --nginx -d story.creatorsflow.app
+
+# Renovación automática (cron ya configurado por certbot)
+sudo certbot renew --dry-run
+</code></pre>
+<hr>
+<h3>Monitoreo</h3>
+<h4>Prometheus + Grafana (opcional)</h4>
+<p><strong>1. Instalar Prometheus</strong>:</p>
+<pre><code class="language-yaml"># prometheus.yml
+scrape_configs:
+  - job_name: &#39;storyclip&#39;
+    static_configs:
+      - targets: [&#39;localhost:3000&#39;]
+</code></pre>
+<p><strong>2. El backend ya expone métricas en <code>/metrics</code></strong>:</p>
+<pre><code>jobs_created_total
+jobs_completed_total
+jobs_failed_total
+job_duration_seconds
+</code></pre>
+<p><strong>3. Configurar alertas</strong>:</p>
+<pre><code class="language-yaml"># alerts.yml
+groups:
+  - name: storyclip
+    rules:
+      - alert: HighFailureRate
+        expr: rate(jobs_failed_total[5m]) &gt; 0.1
+        annotations:
+          summary: &quot;High job failure rate&quot;
+</code></pre>
+<hr>
+<h2>🔧 TROUBLESHOOTING</h2>
+<h3>Problemas Comunes</h3>
+<h4>1. Job se queda en 95%</h4>
+<p><strong>Causa</strong>: El sistema antiguo tenía este problema. El nuevo sistema (robust-processing) lo soluciona.</p>
+<p><strong>Solución</strong>:</p>
+<ul>
+<li>Asegurarse de usar <code>/api/process-video</code> (robust-routes)</li>
+<li>NO usar <code>/api/stories/:id/process</code> (legacy)</li>
+<li>Verificar logs: <code>pm2 logs storyclip</code></li>
+</ul>
+<hr>
+<h4>2. Upload falla con archivos grandes</h4>
+<p><strong>Causa</strong>: Límite de tamaño en Nginx o Express</p>
+<p><strong>Solución</strong>:</p>
+<pre><code class="language-nginx"># Nginx
+client_max_body_size 10G;
+</code></pre>
+<pre><code class="language-javascript">// Express
+app.use(express.json({ limit: &#39;10gb&#39; }));
+app.use(express.urlencoded({ limit: &#39;10gb&#39;, extended: true }));
+</code></pre>
+<hr>
+<h4>3. FFmpeg no encontrado</h4>
+<p><strong>Causa</strong>: FFmpeg no está en el PATH</p>
+<p><strong>Solución</strong>:</p>
+<pre><code class="language-bash"># Verificar instalación
+which ffmpeg
+ffmpeg -version
+
+# Si no está instalado
+sudo apt install ffmpeg
+
+# O instalar versión estática (recomendado)
+wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+tar -xf ffmpeg-release-amd64-static.tar.xz
+sudo cp ffmpeg-*-static/ffmpeg /usr/local/bin/
+sudo cp ffmpeg-*-static/ffprobe /usr/local/bin/
+</code></pre>
+<hr>
+<h4>4. Redis connection refused</h4>
+<p><strong>Causa</strong>: Redis no está corriendo</p>
+<p><strong>Solución</strong>:</p>
+<pre><code class="language-bash"># Verificar Redis
+sudo systemctl status redis-server
+
+# Iniciar Redis
+sudo systemctl start redis-server
+
+# Verificar conexión
+redis-cli ping
+# Debe responder: PONG
+</code></pre>
+<hr>
+<h4>5. CORS errors en frontend</h4>
+<p><strong>Causa</strong>: Origen no permitido en ALLOWED_ORIGINS</p>
+<p><strong>Solución</strong>:</p>
+<pre><code class="language-bash"># Backend .env
+ALLOWED_ORIGINS=http://localhost:3001,https://story.creatorsflow.app
+
+# Reiniciar backend
+pm2 restart storyclip
+</code></pre>
+<hr>
+<h4>6. WebSocket no conecta</h4>
+<p><strong>Causa</strong>: Nginx no está configurado para WebSocket</p>
+<p><strong>Solución</strong>:</p>
+<pre><code class="language-nginx">location /ws {
+    proxy_pass http://localhost:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection &quot;upgrade&quot;;
+}
+</code></pre>
+<hr>
+<h4>7. Clips no se descargan</h4>
+<p><strong>Causa</strong>: Permisos de archivos incorrectos</p>
+<p><strong>Solución</strong>:</p>
+<pre><code class="language-bash"># Verificar permisos
+ls -la /srv/storyclip/outputs/
+
+# Corregir permisos
+sudo chown -R www-data:www-data /srv/storyclip/outputs/
+sudo chmod -R 755 /srv/storyclip/outputs/
+</code></pre>
+<hr>
+<h4>8. Metricool API error</h4>
+<p><strong>Causa</strong>: Token inválido o expirado</p>
+<p><strong>Solución</strong>:</p>
+<pre><code class="language-bash"># Verificar token
+curl -X GET &quot;https://app.metricool.com/api/admin/simpleProfiles?userId=4172139&quot; \
+  -H &quot;X-Mc-Auth: YOUR_TOKEN&quot;
+
+# Si falla, regenerar token en Metricool dashboard
+</code></pre>
+<hr>
+<h3>Logs y Debugging</h3>
+<p><strong>Ver logs del backend</strong>:</p>
+<pre><code class="language-bash"># PM2 logs
+pm2 logs storyclip
+
+# Logs del sistema
+tail -f /var/log/pm2/storyclip-error.log
+tail -f /var/log/pm2/storyclip-out.log
+</code></pre>
+<p><strong>Ver jobs en la base de datos</strong>:</p>
+<pre><code class="language-bash">sqlite3 /srv/storyclip/database/storyclip.db
+
+SELECT job_id, status, progress, error_msg
+FROM jobs
+WHERE status = &#39;error&#39;
+ORDER BY created_at DESC
+LIMIT 10;
+</code></pre>
+<p><strong>Ver estado de Redis</strong>:</p>
+<pre><code class="language-bash">redis-cli
+
+# Ver todas las keys
+KEYS *
+
+# Ver info del servidor
+INFO
+
+# Ver memoria usada
+MEMORY STATS
+</code></pre>
+<p><strong>Monitorear procesos</strong>:</p>
+<pre><code class="language-bash"># Uso de CPU y memoria
+htop
+
+# Procesos de Node.js
+ps aux | grep node
+
+# Procesos de FFmpeg
+ps aux | grep ffmpeg
+</code></pre>
+<hr>
+<h2>📚 GLOSARIO</h2>
+<h3>Términos Técnicos</h3>
+<ul>
+<li><strong>Job</strong>: Tarea de procesamiento de video. Tiene un ID único y estados (pending, running, done, error).</li>
+<li><strong>Clip</strong>: Segmento de video extraído del video original. Puede tener filtros y efectos aplicados.</li>
+<li><strong>Story</strong>: Clip corto optimizado para Instagram/Facebook Stories (típicamente 5-15 segundos).</li>
+<li><strong>Reel</strong>: Clip más largo optimizado para Instagram/Facebook Reels (típicamente 15-60 segundos).</li>
+<li><strong>Upload ID</strong>: Identificador único del video subido, antes de ser procesado.</li>
+<li><strong>Batch</strong>: Conjunto de clips que se publican juntos a redes sociales.</li>
+<li><strong>Preset</strong>: Configuración predefinida de filtros, efectos o exportación.</li>
+<li><strong>Overlay</strong>: Capa visual superpuesta al video (texto, imágenes, animaciones).</li>
+<li><strong>Filter</strong>: Efecto visual aplicado al video (vintage, cinematic, blur, etc.).</li>
+<li><strong>Idempotency Key</strong>: Hash único que identifica una configuración específica para evitar reprocesamiento.</li>
+</ul>
+<h3>Acrónimos</h3>
+<ul>
+<li><strong>API</strong>: Application Programming Interface</li>
+<li><strong>CORS</strong>: Cross-Origin Resource Sharing</li>
+<li><strong>SSE</strong>: Server-Sent Events</li>
+<li><strong>FFmpeg</strong>: Fast Forward MPEG (herramienta de procesamiento multimedia)</li>
+<li><strong>PM2</strong>: Process Manager 2</li>
+<li><strong>CDN</strong>: Content Delivery Network</li>
+<li><strong>JWT</strong>: JSON Web Token</li>
+<li><strong>CRUD</strong>: Create, Read, Update, Delete</li>
+<li><strong>WAL</strong>: Write-Ahead Logging (modo de SQLite)</li>
+<li><strong>SPA</strong>: Single Page Application</li>
+<li><strong>SSR</strong>: Server-Side Rendering</li>
+<li><strong>SSG</strong>: Static Site Generation</li>
+</ul>
+<hr>
+<h2>📞 SOPORTE</h2>
+<h3>Recursos</h3>
+<ul>
+<li><strong>Repositorio</strong>: <code>/srv/storyclip/</code></li>
+<li><strong>Logs Backend</strong>: <code>/var/log/pm2/storyclip-*.log</code></li>
+<li><strong>Base de Datos</strong>: <code>/srv/storyclip/database/storyclip.db</code></li>
+<li><strong>Documentación adicional</strong>: <code>/srv/storyclip/docs/</code></li>
+</ul>
+<h3>Contacto</h3>
+<p>Para soporte técnico o consultas, contactar al equipo de desarrollo de StoryClip.</p>
+<hr>
+<h2>📝 CHANGELOG</h2>
+<h3>v1.0.0 (Octubre 2025)</h3>
+<ul>
+<li>✅ Sistema de procesamiento robusto (nunca se queda en 95%)</li>
+<li>✅ Integración completa con Metricool</li>
+<li>✅ WebSocket para progreso en tiempo real</li>
+<li>✅ Frontend Next.js 15 con React 19</li>
+<li>✅ Sistema de colas con Bull/Redis</li>
+<li>✅ Base de datos SQLite para persistencia</li>
+<li>✅ Sugerencias IA con animaciones</li>
+<li>✅ Procesamiento por lotes</li>
+<li>✅ Descarga de clips en ZIP</li>
+</ul>
+<hr>
+<p><strong>Fin de la Documentación Técnica</strong></p>
+<p><em>Este documento proporciona una visión completa de la arquitectura, implementación y operación de StoryClip. Para actualizaciones o correcciones, editar este archivo en <code>/srv/storyclip/DOCUMENTACION_TECNICA_COMPLETA.md</code>.</em></p>
+
+        </div>
+
+        <footer style="text-align: center; padding: 40px 20px; color: #64748b;">
+            <p>© 2025 StoryClip - Documentación Técnica</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Generado automáticamente desde DOCUMENTACION_TECNICA_COMPLETA.md</p>
+        </footer>
+    </div>
+</body>
+</html>

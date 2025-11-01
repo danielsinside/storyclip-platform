@@ -1,0 +1,65 @@
+[
+  {
+    "id": "storyclip_fast",
+    "name": "H.264 Rápido",
+    "description": "H.264 rápido para previews y export general",
+    "cmd": "-vf \"format=yuv420p\" -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k",
+    "suitable_for": ["preview", "general", "social"],
+    "quality": "good",
+    "speed": "fast"
+  },
+  {
+    "id": "storyclip_quality",
+    "name": "HEVC Alta Calidad",
+    "description": "HEVC alta calidad (50–60% menos tamaño que H.264)",
+    "cmd": "-vf \"format=yuv420p10le\" -c:v libx265 -preset slow -x265-params profile=main10:aq-mode=3:aq-strength=1.0:psy-rd=2.0 -crf 21 -pix_fmt yuv420p10le -c:a aac -b:a 160k",
+    "suitable_for": ["archival", "high_quality", "storage"],
+    "quality": "excellent",
+    "speed": "slow"
+  },
+  {
+    "id": "storyclip_social_916",
+    "name": "Stories/Reels 9:16",
+    "description": "Stories/Reels 9:16 con keyframes y loudness",
+    "cmd": "-vf \"scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,format=yuv420p\" -c:v libx264 -preset veryfast -crf 21 -g 48 -keyint_min 48 -sc_threshold 0 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k -af \"loudnorm=I=-14:TP=-1.5:LRA=11\"",
+    "suitable_for": ["stories", "reels", "social_vertical"],
+    "quality": "good",
+    "speed": "fast"
+  },
+        {
+            "id": "storyclip_av1",
+            "name": "AV1 Moderno",
+            "description": "AV1 equilibrado con SVT-AV1 (preset 6, ~3x velocidad real)",
+            "cmd": "-c:v libsvtav1 -crf 28 -preset 6 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k",
+            "suitable_for": ["modern", "web", "future_proof"],
+            "quality": "excellent",
+            "speed": "medium"
+        },
+        {
+            "id": "storyclip_av1_fast",
+            "name": "AV1 Rápido",
+            "description": "AV1 con velocidad prioritaria (SVT-AV1 preset 8, ~4x velocidad)",
+            "cmd": "-c:v libsvtav1 -crf 30 -preset 8 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k",
+            "suitable_for": ["modern", "web", "fast_av1"],
+            "quality": "good",
+            "speed": "fast"
+        },
+  {
+    "id": "storyclip_stabilized",
+    "name": "Estabilizado",
+    "description": "Video con estabilización automática",
+    "cmd": "-vf \"vidstabdetect=stepsize=6:shakiness=8:accuracy=9:result=transforms.trf\" -c:v libx264 -preset medium -crf 23 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k",
+    "suitable_for": ["shaky_video", "handheld", "stabilization"],
+    "quality": "good",
+    "speed": "medium"
+  },
+  {
+    "id": "storyclip_vmaf_quality",
+    "name": "Calidad VMAF",
+    "description": "Procesamiento con análisis de calidad VMAF",
+    "cmd": "-c:v libx264 -preset medium -crf 23 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k",
+    "suitable_for": ["quality_analysis", "professional"],
+    "quality": "excellent",
+    "speed": "medium"
+  }
+]

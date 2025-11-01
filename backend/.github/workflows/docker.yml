@@ -1,0 +1,49 @@
+name: Build & Push StoryClip
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "docker/**"
+      - "package*.json"
+      - "server.js"
+      - "src/**"
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ secrets.DOCKERHUB_USER }}/storyclip-backend:ffmpeg8-svt
+            ${{ secrets.DOCKERHUB_USER }}/storyclip-backend:latest
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,29 @@
+data: {"type":"start","message":"Starting StoryClips generation..."}
+
+data: {"type":"processing","message":"Initializing AI engine","progress":0}
+
+data: {"type":"processing","message":"Processing clip 1/50","progress":2}
+
+data: {"type":"processing","message":"Processing clip 5/50","progress":10}
+
+data: {"type":"processing","message":"Processing clip 10/50","progress":20}
+
+data: {"type":"processing","message":"Processing clip 15/50","progress":30}
+
+data: {"type":"processing","message":"Processing clip 20/50","progress":40}
+
+data: {"type":"processing","message":"Processing clip 25/50","progress":50}
+
+data: {"type":"processing","message":"Processing clip 30/50","progress":60}
+
+data: {"type":"processing","message":"Processing clip 35/50","progress":70}
+
+data: {"type":"processing","message":"Processing clip 40/50","progress":80}
+
+data: {"type":"processing","message":"Processing clip 45/50","progress":90}
+
+data: {"type":"processing","message":"Processing clip 50/50","progress":100}
+
+data: {"type":"complete","message":"All 50 clips generated successfully"}
+
+data: {"type":"done","message":"Ready to publish"}

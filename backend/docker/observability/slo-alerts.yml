@@ -1,0 +1,32 @@
+groups:
+- name: storyclip-slo
+  rules:
+  # SLI: tasa de fallos = jobs_failed / jobs_created
+  - record: job_error_ratio_5m
+    expr: (rate(storyclip_jobs_failed_total[5m])) / (rate(storyclip_jobs_created_total[5m]) + 1e-9)
+  - record: job_error_ratio_1h
+    expr: (rate(storyclip_jobs_failed_total[1h])) / (rate(storyclip_jobs_created_total[1h]) + 1e-9)
+
+  # Burn rate (5m/1h) para SLO de 99.5% (error budget 0.5%)
+  - record: job_burnrate_5m
+    expr: job_error_ratio_5m / 0.005
+  - record: job_burnrate_1h
+    expr: job_error_ratio_1h / 0.005
+
+  # Fast burn (reacciona rápido)
+  - alert: SLOFastBurn
+    expr: job_burnrate_5m > 14 and job_burnrate_1h > 14
+    for: 2m
+    labels: { severity: critical }
+    annotations:
+      summary: "SLO quemándose rápido"
+      description: "Burn rate >14× (5m/1h). Investigar causas/rollback."
+
+  # Slow burn (degradación sostenida)
+  - alert: SLOSlowBurn
+    expr: job_burnrate_1h > 6 and job_burnrate_5m > 6
+    for: 30m
+    labels: { severity: warning }
+    annotations:
+      summary: "SLO degradándose"
+      description: "Burn rate >6× sostenido. Revisa colas/presets/infra."

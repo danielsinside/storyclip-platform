@@ -1,0 +1,21 @@
+apiVersion: 1
+providers:
+- name: 'StoryClip'
+  orgId: 1
+  folder: 'StoryClip'
+  type: file
+  disableDeletion: false
+  updateIntervalSeconds: 10
+  options:
+    path: /var/lib/grafana/dashboards
+
+
+
+
+
+
+
+
+
+
+

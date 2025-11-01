@@ -1,0 +1,599 @@
+openapi: 3.1.0
+info:
+  title: StoryClip Render API
+  description: API for video rendering with FFmpeg 8.0 "Huffman" optimized for AMD Ryzen 9 7900
+  version: 1.0.0
+  contact:
+    name: StoryClip Team
+    url: https://storyclip.creatorsflow.app
+servers:
+  - url: https://storyclip.creatorsflow.app/api
+    description: Production server
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /capabilities:
+    get:
+      summary: Get system capabilities
+      description: Returns information about available codecs, filters, and presets
+      tags:
+        - System
+      responses:
+        '200':
+          description: System capabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capability'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /presets:
+    get:
+      summary: List available presets
+      description: Returns all available rendering presets
+      tags:
+        - Presets
+      responses:
+        '200':
+          description: List of presets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PresetInfo'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /presets/{id}:
+    get:
+      summary: Get preset details
+      description: Returns details for a specific preset
+      tags:
+        - Presets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Preset ID
+          schema:
+            type: string
+            enum:
+              - storyclip_fast
+              - storyclip_quality
+              - storyclip_social_916
+              - storyclip_av1
+              - storyclip_av1_fast
+              - storyclip_stabilized
+              - storyclip_vmaf_quality
+      responses:
+        '200':
+          description: Preset details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetInfo'
+        '404':
+          description: Preset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /render:
+    post:
+      summary: Create render job
+      description: Creates a new video rendering job
+      tags:
+        - Render
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenderCreateRequest'
+      responses:
+        '201':
+          description: Render job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenderCreateResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /render/{id}:
+    get:
+      summary: Get render job status
+      description: Returns the current status and progress of a render job
+      tags:
+        - Render
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Job ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenderStatus'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Cancel render job
+      description: Cancels a running render job
+      tags:
+        - Render
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Job ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /benchmark:
+    post:
+      summary: Run codec benchmark
+      description: Runs a performance benchmark for a specific codec
+      tags:
+        - Benchmark
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                codec:
+                  type: string
+                  enum: [h264, hevc, av1]
+                  description: Codec to benchmark
+                duration:
+                  type: integer
+                  minimum: 1
+                  maximum: 300
+                  default: 60
+                  description: Duration in seconds
+                inputUrl:
+                  type: string
+                  format: uri
+                  description: Input video URL
+              required:
+                - codec
+                - inputUrl
+      responses:
+        '200':
+          description: Benchmark results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  benchmark:
+                    type: object
+                    properties:
+                      codec:
+                        type: string
+                      duration:
+                        type: number
+                        description: Processing time in seconds
+                      fileSize:
+                        type: integer
+                        description: Output file size in bytes
+                      speed:
+                        type: number
+                        description: Speed multiplier (x realtime)
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Capability:
+      type: object
+      properties:
+        engine:
+          type: string
+          enum: [ffmpeg]
+        version:
+          type: string
+          example: "n8.0"
+        codecs:
+          type: object
+          properties:
+            x264:
+              type: boolean
+            x265:
+              type: boolean
+            av1_svt:
+              type: boolean
+            av1_aom:
+              type: boolean
+            dav1d:
+              type: boolean
+        filters:
+          type: array
+          items:
+            type: string
+          example: ["zoompan", "tblend", "minterpolate", "frei0r", "vmaf", "vidstab"]
+        presets:
+          type: array
+          items:
+            type: string
+            enum:
+              - storyclip_fast
+              - storyclip_quality
+              - storyclip_social_916
+              - storyclip_av1
+              - storyclip_av1_fast
+              - storyclip_stabilized
+              - storyclip_vmaf_quality
+        optimizations:
+          type: object
+          properties:
+            cpu:
+              type: string
+              example: "znver3"
+            threads:
+              type: string
+              example: "auto"
+            avx:
+              type: boolean
+            avx2:
+              type: boolean
+
+    PresetInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          enum:
+            - storyclip_fast
+            - storyclip_quality
+            - storyclip_social_916
+            - storyclip_av1
+            - storyclip_av1_fast
+            - storyclip_stabilized
+            - storyclip_vmaf_quality
+        name:
+          type: string
+          example: "H.264 Rápido"
+        description:
+          type: string
+          example: "H.264 rápido para previews y export general"
+        cmd:
+          type: string
+          description: FFmpeg command template
+        suitable_for:
+          type: array
+          items:
+            type: string
+          example: ["preview", "general", "social"]
+        quality:
+          type: string
+          enum: [good, excellent]
+        speed:
+          type: string
+          enum: [fast, medium, slow]
+
+    RenderCreateRequest:
+      type: object
+      required:
+        - preset
+        - inputs
+      properties:
+        preset:
+          type: string
+          enum:
+            - storyclip_fast
+            - storyclip_quality
+            - storyclip_social_916
+            - storyclip_av1
+            - storyclip_av1_fast
+            - storyclip_stabilized
+            - storyclip_vmaf_quality
+        inputs:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                format: uri
+              path:
+                type: string
+            required:
+              - url
+        overlays:
+          type: object
+          properties:
+            vs:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                style:
+                  type: string
+                  example: "center_glow"
+                label:
+                  type: string
+                  example: "VS"
+        audio:
+          type: object
+          properties:
+            normalize:
+              type: boolean
+            loudnessTarget:
+              type: number
+        output:
+          type: object
+          properties:
+            container:
+              type: string
+              enum: [mp4, mkv, webm]
+              default: mp4
+            maxDurationSec:
+              type: integer
+              minimum: 1
+              maximum: 3600
+              default: 60
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+
+    RenderCreateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        createdAt:
+          type: string
+          format: date-time
+
+    RenderStatus:
+      oneOf:
+        - $ref: '#/components/schemas/RenderStatusProcessing'
+        - $ref: '#/components/schemas/RenderStatusCompleted'
+        - $ref: '#/components/schemas/RenderStatusFailed'
+
+    RenderStatusProcessing:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        preset:
+          type: string
+        status:
+          type: string
+          enum: [processing]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutputFile'
+        error:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+
+    RenderStatusCompleted:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        preset:
+          type: string
+        status:
+          type: string
+          enum: [completed]
+        progress:
+          type: integer
+          const: 100
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutputFile'
+        error:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+
+    RenderStatusFailed:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        preset:
+          type: string
+        status:
+          type: string
+          enum: [failed]
+        progress:
+          type: integer
+          const: 0
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutputFile'
+        error:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+
+    OutputFile:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        path:
+          type: string
+        size:
+          type: integer
+          description: File size in bytes
+        duration:
+          type: number
+          description: Duration in seconds
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: System
+    description: System information and capabilities
+  - name: Presets
+    description: Rendering presets management
+  - name: Render
+    description: Video rendering jobs
+  - name: Benchmark
+    description: Performance benchmarking
+
+
+
+
+
+
+
+
+
+
+

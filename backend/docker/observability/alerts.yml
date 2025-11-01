@@ -1,0 +1,96 @@
+groups:
+- name: storyclip-alerts
+  rules:
+  - alert: BackendDown
+    expr: up{job="storyclip-backend"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Backend caído"
+      description: "El job storyclip-backend no responde a /api/metrics"
+
+  - alert: HighQueueDepth
+    expr: storyclip_queue_depth > 20
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Cola de renders alta"
+      description: "Más de 20 jobs en cola por >5m"
+
+  - alert: HighJobFailures
+    expr: increase(storyclip_jobs_failed_total[10m]) > 3
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Fallos de render elevados"
+      description: "Más de 3 fallos en 10m"
+
+  - alert: SVTAV1Missing
+    expr: avg_over_time(storyclip_svt_av1_available[10m]) < 0.5
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "SVT-AV1 no disponible"
+      description: "libsvtav1 no detectado persistente"
+
+  - alert: HighActiveJobs
+    expr: storyclip_active_jobs > 15
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Muchos jobs activos"
+      description: "Más de 15 jobs activos simultáneamente"
+
+- name: node-host
+  rules:
+  - alert: HighCPU
+    expr: avg(rate(node_cpu_seconds_total{mode!="idle"}[2m])) by (instance) > 0.85
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "CPU alta en host"
+      description: "Uso CPU >85% por 10m"
+
+  - alert: HighIOwait
+    expr: avg(rate(node_cpu_seconds_total{mode="iowait"}[2m])) by (instance) > 0.10
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "IOwait elevado"
+      description: "IOwait >10% por 10m"
+
+  - alert: HighMemoryUsage
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.90
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Memoria alta en host"
+      description: "Uso de memoria >90%"
+
+  - alert: DiskSpaceLow
+    expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.85
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Espacio en disco bajo"
+      description: "Espacio en disco <15% disponible"
+
+
+
+
+
+
+
+
+
+
+

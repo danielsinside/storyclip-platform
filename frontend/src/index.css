@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Dark theme - professional video editing environment */
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 40% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 40% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Purple accent - creativity & AI */
+    --primary: 270 70% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Cyan secondary - technology */
+    --secondary: 190 85% 55%;
+    --secondary-foreground: 222 47% 5%;
+
+    --muted: 217 32% 15%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 270 70% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 217 32% 18%;
+    --input: 217 32% 18%;
+    --ring: 270 70% 60%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(270 70% 60% / 0.2), hsl(190 85% 55% / 0.2));
+    --gradient-accent: linear-gradient(135deg, hsl(270 70% 60%), hsl(190 85% 55%));
+    --gradient-subtle: linear-gradient(180deg, hsl(222 40% 8%), hsl(222 47% 5%));
+
+    /* Shadows */
+    --shadow-glow: 0 0 30px hsl(270 70% 60% / 0.3);
+    --shadow-card: 0 10px 40px hsl(222 47% 3% / 0.5);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Success/Warning/Info */
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(12deg); }
+    25% { transform: rotate(8deg); }
+    50% { transform: rotate(15deg); }
+    75% { transform: rotate(10deg); }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) translateX(0px); }
+    25% { transform: translateY(-20px) translateX(10px); }
+    50% { transform: translateY(-10px) translateX(-10px); }
+    75% { transform: translateY(-15px) translateX(5px); }
+  }
+  
+  @keyframes glitch {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-2px); }
+    20% { transform: translateX(2px); }
+    30% { transform: translateX(-2px); }
+    40% { transform: translateX(2px); }
+    50% { transform: translateX(-1px); }
+    60% { transform: translateX(1px); }
+    70% { transform: translateX(0); }
+  }
+  
+  @keyframes vhsTracking {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  
+  @keyframes rainDrop {
+    0% { transform: translateY(-100%); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(200vh); opacity: 0; }
+  }
+  
+  @keyframes matrixRain {
+    0% { transform: translateY(-100%); opacity: 0; }
+    10% { opacity: 0.7; }
+    90% { opacity: 0.7; }
+    100% { transform: translateY(100vh); opacity: 0; }
+  }
+  
+  @keyframes dnaRotate {
+    0%, 100% { transform: translateX(0) scale(1); }
+    50% { transform: translateX(-30px) scale(1.2); }
+  }
+  
+  @keyframes wave {
+    0%, 100% { transform: translateX(0) scaleX(1); }
+    50% { transform: translateX(20px) scaleX(1.1); }
+  }
+
+  @keyframes cameraZoom {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  @keyframes cameraZoomFlipped {
+    0%, 100% { transform: scaleX(-1) scale(1); }
+    50% { transform: scaleX(-1) scale(1.15); }
+  }
+
+  @keyframes dollyEffect {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  @keyframes shakeEffect {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-2px, 1px); }
+    20% { transform: translate(2px, -1px); }
+    30% { transform: translate(-1px, 2px); }
+    40% { transform: translate(1px, -2px); }
+    50% { transform: translate(-2px, -1px); }
+    60% { transform: translate(2px, 1px); }
+    70% { transform: translate(-1px, -2px); }
+    80% { transform: translate(1px, 2px); }
+    90% { transform: translate(-1px, 1px); }
+  }
+
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .text-gradient {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

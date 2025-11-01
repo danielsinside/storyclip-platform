@@ -1,0 +1,37 @@
+data: {"type":"start","message":"Starting publication..."}
+
+data: {"type":"publishing","message":"Publishing clip 1/50","progress":2,"data":{"clipIndex":0}}
+
+data: {"type":"clip_published","message":"Clip 1 published successfully","data":{"clipIndex":0}}
+
+data: {"type":"publishing","message":"Publishing clip 5/50","progress":10,"data":{"clipIndex":4}}
+
+data: {"type":"clip_published","message":"Clip 5 published successfully","data":{"clipIndex":4}}
+
+data: {"type":"publishing","message":"Publishing clip 10/50","progress":20,"data":{"clipIndex":9}}
+
+data: {"type":"clip_published","message":"Clip 10 published successfully","data":{"clipIndex":9}}
+
+data: {"type":"publishing","message":"Publishing clip 15/50","progress":30,"data":{"clipIndex":14}}
+
+data: {"type":"clip_failed","message":"Clip 15 failed - will retry","data":{"clipIndex":14}}
+
+data: {"type":"publishing","message":"Publishing clip 20/50","progress":40,"data":{"clipIndex":19}}
+
+data: {"type":"clip_published","message":"Clip 20 published successfully","data":{"clipIndex":19}}
+
+data: {"type":"publishing","message":"Publishing clip 30/50","progress":60,"data":{"clipIndex":29}}
+
+data: {"type":"clip_published","message":"Clip 30 published successfully","data":{"clipIndex":29}}
+
+data: {"type":"publishing","message":"Publishing clip 40/50","progress":80,"data":{"clipIndex":39}}
+
+data: {"type":"clip_published","message":"Clip 40 published successfully","data":{"clipIndex":39}}
+
+data: {"type":"publishing","message":"Publishing clip 50/50","progress":100,"data":{"clipIndex":49}}
+
+data: {"type":"clip_published","message":"Clip 50 published successfully","data":{"clipIndex":49}}
+
+data: {"type":"complete","message":"Publication complete - 49/50 published, 1 failed"}
+
+data: {"type":"done","message":"All done!"}

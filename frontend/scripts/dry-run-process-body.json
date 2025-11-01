@@ -1,0 +1,80 @@
+{
+  "uploadId": "test-upload-123",
+  "mode": "manual",
+  "preset": "storyclip_social_916",
+  "clips": [
+    {
+      "start": 0,
+      "end": 10,
+      "effects": {
+        "mirrorHorizontal": true,
+        "color": {
+          "brightness": 0.05,
+          "contrast": 1.2,
+          "saturation": 1.1
+        },
+        "indicator": {
+          "enabled": true,
+          "label": "1",
+          "position": "top-left",
+          "size": 90,
+          "textColor": "#FFFFFF",
+          "bgColor": "#FF2D55",
+          "opacity": 0.8,
+          "style": "rounded"
+        }
+      }
+    },
+    {
+      "start": 15,
+      "end": 25,
+      "effects": {
+        "mirrorHorizontal": true,
+        "color": {
+          "brightness": 0.05,
+          "contrast": 1.2,
+          "saturation": 1.1
+        },
+        "indicator": {
+          "enabled": true,
+          "label": "2",
+          "position": "top-left",
+          "size": 90,
+          "textColor": "#FFFFFF",
+          "bgColor": "#FF2D55",
+          "opacity": 0.8,
+          "style": "rounded"
+        }
+      }
+    },
+    {
+      "start": 30,
+      "end": 40,
+      "effects": {
+        "mirrorHorizontal": true,
+        "color": {
+          "brightness": 0.05,
+          "contrast": 1.2,
+          "saturation": 1.1
+        },
+        "indicator": {
+          "enabled": true,
+          "label": "3",
+          "position": "top-left",
+          "size": 90,
+          "textColor": "#FFFFFF",
+          "bgColor": "#FF2D55",
+          "opacity": 0.8,
+          "style": "rounded"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "title": "Test Video",
+    "description": "Test Description", 
+    "keywords": "test, video",
+    "seed": "natural",
+    "delayMode": "natural"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "title": "StoryClip – SLOs Avanzado",
+  "uid": "storyclip-slos-advanced",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Error Budget Remaining",
+      "targets": [{ "expr": "1 - (job_error_ratio_1h / 0.005)" }],
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "green", "value": 0.8 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Burn Rate (5m)",
+      "targets": [{ "expr": "job_burnrate_5m" }],
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 6 },
+              { "color": "red", "value": 14 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Burn Rate (1h)",
+      "targets": [{ "expr": "job_burnrate_1h" }],
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 6 },
+              { "color": "red", "value": 14 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate (5m)",
+      "targets": [{ "expr": "job_error_ratio_5m" }],
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 0.005 },
+              { "color": "red", "value": 0.01 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Burn Rate Over Time",
+      "targets": [
+        { "expr": "job_burnrate_5m", "legendFormat": "5m" },
+        { "expr": "job_burnrate_1h", "legendFormat": "1h" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "yAxes": [
+        {
+          "label": "Burn Rate",
+          "min": 0,
+          "max": 20
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Error Rate Over Time",
+      "targets": [
+        { "expr": "job_error_ratio_5m", "legendFormat": "5m" },
+        { "expr": "job_error_ratio_1h", "legendFormat": "1h" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "yAxes": [
+        {
+          "label": "Error Rate",
+          "min": 0,
+          "max": 0.02
+        }
+      ]
+    },
+    {
+      "type": "heatmap",
+      "title": "Latency Distribution by Preset",
+      "targets": [{ "expr": "histogram_quantile(0.5, sum(rate(storyclip_job_duration_seconds_bucket[5m])) by (le, preset))" }],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 }
+    }
+  ],
+  "time": { "from": "now-6h", "to": "now" }
+}
